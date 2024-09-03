@@ -75,19 +75,7 @@ MDSetAppCFG()
 MDSidebar()
 
 st.title('Meeting Doctors Analytics')
-st.markdown(
-    """
-        ### Bienvenido a MD Analytics
-        MD Analytics es un app mediante que permite el seguimiento y análisis básico de los distintos servicios contratados.
-
-        👈 Mediante este selector puede seleccionar el servicio que deseas analizar
-
-        **IMPORTANTE: Este dashboard no dispone de datos real-time.** Los datos a analizar siempre son hasta último día cerrado
-
-        *Si tienes cualquier duda o incidencia con el dashboard, ponte en contacto con nuestro equipo de [data](mailto:data@meetingdoctors.com)*
-    """
-  )
-st.subheader('Indicadores generales')
+st.subheader('NPS - Indicadores generales')
 
 conn = MDConnection()
 specialitiesdf = MDGetMasterData(conn,"specialities")
