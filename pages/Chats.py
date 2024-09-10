@@ -115,13 +115,40 @@ else:
     xAxisName = "Año"
     cy_chatsdf_date = chatusagedf.groupby('Año')['Chats'].sum().reset_index(name ='Chats')
 
-# Generamos el barchart
+# Generamos el barchart mensual/anual
 st.subheader('Evolución mensual de consultas de Chat')
 st.bar_chart(cy_chatsdf_date, x=xAxisName, y="Chats", color="#4fa6ff")
 
 # Agrupamos el df por Especialidad para generar un bar y pie chart
-cy_chatsdf_espe = chatusagedf.groupby('Speciality')['Chats'].sum().reset_index(name ='Chats').sort_values(by='Chats',ascending=False)
+cy_chatsdf_espe = chatusagedf.groupby('Speciality')['Chats'].sum().reset_index(name ='Chats') # .sort_values(by='Chats',ascending=False)
+# cy_chatsdf_espe = cy_chatsdf_espe.sort_values(by='Chats',ascending=False)
+# print(cy_chatsdf_espe)
 
-# Generamos el barchart
-st.subheader('Distribución de consultas de Chat por Especialidad')
-st.bar_chart(cy_chatsdf_espe, x="Speciality", y="Chats", color="Speciality")
+
+cols = st.columns([1, 1])
+
+# Charts por especialidad
+
+
+# Generamos el donut chart por especialidad
+# region_select = alt.selection_point(fields=[chatusagedf['Speciality'].drop_duplicates()], empty="all")
+with cols[0]:
+    st.subheader('Distribución de consultas de Chat por Especialidad')
+    base = alt.Chart(cy_chatsdf_espe).mark_bar().encode(
+        theta=alt.Theta("Chats", stack=True), 
+        color=alt.Color("Speciality", legend=None).legend()
+        # y=alt.Y('Chats').stack(True),
+        # x=alt.X('Speciality', sort='y'),
+        # opacity=alt.condition(region_select, alt.value(1), alt.value(0.25))
+    ).properties(width=500)
+
+    pie = base.mark_arc(outerRadius=120, innerRadius=50)
+    # text = base.mark_text(radius=150, size=15).encode(text="Speciality:N")
+
+    pie #+ text
+
+with cols[1]:
+    st.subheader(' ')
+    # Generamos el barchart por especialidad
+    st.bar_chart(cy_chatsdf_espe, x="Speciality", y="Chats", color="Speciality")
+    # st.button('kk')

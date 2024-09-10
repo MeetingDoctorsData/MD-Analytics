@@ -3,7 +3,7 @@ from PIL import Image
 # from streamlit_dynamic_filters import DynamicFilters
 
 def MDSetAppCFG():
-    st.set_page_config(layout="wide")
+    st.set_page_config(layout="wide", page_title="Inicio")
     custom_html = """
     <div class="banner">
         <img src="https://meetingdoctors.com/app/themes/custom_theme/build/assets/img/logo_meeting_doctors.png" alt="Banner Image">
