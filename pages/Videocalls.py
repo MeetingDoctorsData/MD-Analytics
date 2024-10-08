@@ -1,4 +1,6 @@
 import streamlit as st
+import pandas as pd
+import altair as alt
 from PIL import Image
 # from streamlit_dynamic_filters import DynamicFilters
 
@@ -33,25 +35,15 @@ def MDSidebar():
     st.sidebar.page_link("pages/Chats.py", label="Chats")
     st.sidebar.page_link("pages/Videocalls.py", label="Videocalls")
     st.sidebar.page_link("pages/NPS.py", label="NPS")
-
-def MDFilters(usersdf, specialitiesdf):
     st.sidebar.header("Filtros")
-    st.sidebar.multiselect(
-        "Año",
-        ["2024", "2023", "2022"]
+
+def MDMultiselectFilter (multiselectname, df):
+    multiselect_df = st.sidebar.multiselect(
+        multiselectname,
+        df
     )
-    st.sidebar.multiselect(
-        "Mes",
-        ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"]
-    )
-    st.sidebar.multiselect(
-        "Grupos de usuario",
-        usersdf
-    )
-    st.sidebar.multiselect(
-        "Especialidad",
-        specialitiesdf
-    )
+
+    return multiselect_df
 
 def MDConnection():
     # Initialize connection.
@@ -59,15 +51,21 @@ def MDConnection():
 
     return conn
 
-def MDGetMasterData(conn, tableName):
-    # Perform query.
-    df = conn.query("SELECT DISTINCT * from "+ chr(34) + tableName + chr(34) +";", ttl=600)
-
-    return df
-
-def MDGetFilteredData(conn, tableName):
-    # Perform query.
-    df = conn.query("SELECT DISTINCT * from "+ chr(34) + tableName + chr(34) +" WHERE " + chr(34) + "ApiKey" + chr(34) + " = 'ccdf91e84fda3ccf';", ttl=600)
+def MDGetUsageData(conn):
+    df = conn.query("""
+            SELECT 
+                Year("VcDate") as "Año"
+                , MONTHNAME("VcDate") as "Mes"
+                , "VcUserCustomerGroup" as "VCUserDescription"
+                , "specialities"."SpecialityES" as "Speciality"
+                , count(distinct "VcID") as "Videocalls" 
+            FROM "Videocalls"
+            LEFT JOIN "specialities" using ("SpecialityID")
+            WHERE "ApiKey" = 'ccdf91e84fda3ccf'
+            AND lower("VcStatus") = 'finished'
+            GROUP BY 1,2,3,4
+            ;
+    """)
 
     return df
 
@@ -75,10 +73,84 @@ MDSetAppCFG()
 MDSidebar()
 
 st.title('Meeting Doctors Analytics')
-st.subheader('Videocalls - Indicadores generales')
 
+# Nos conectamos a la base de datos
 conn = MDConnection()
-specialitiesdf = MDGetMasterData(conn,"specialities")
-usersdf = MDGetFilteredData(conn,"users")
 
-MDFilters(usersdf["UserCustomerGroup"].str.capitalize().unique(),specialitiesdf["SpecialityES"].unique())
+# Obtenemos los datos de uso directamente del dwh
+videocallusagedf = MDGetUsageData(conn)
+videocallusagedf['VCUserDescription'] = videocallusagedf['VCUserDescription'].str.capitalize()
+
+# Generamos los filtros a partir de los datos de uso
+years_selected = MDMultiselectFilter("Año",videocallusagedf.sort_values(by="Año", ascending=False)['Año'].unique())
+# Ordenamos el df para poder mostrarlo correctamente
+months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+videocallusagedf['Mes'] = pd.Categorical(videocallusagedf['Mes'], categories=months, ordered=True)
+month_selected = MDMultiselectFilter("Mes",videocallusagedf.sort_values(by="Mes", ascending=True)['Mes'].unique())
+usergroups_selected = MDMultiselectFilter("Grupos de usuario",videocallusagedf['VCUserDescription'].unique())
+especialidad_selected = MDMultiselectFilter("Especialidad",videocallusagedf['Speciality'].unique())
+
+# Seteamos los campos a su tipo de dato correspondiente
+# videocallusagedf["SpecialityID"] = pd.to_numeric(videocallusagedf['SpecialityID'])
+
+# Pregutamos si hay algun filtro realizado, en caso de tenerlo, lo aplicamos al dataset para generar los gráficos
+if years_selected:
+    mask_years = videocallusagedf['Año'].isin(years_selected)
+    videocallusagedf = videocallusagedf[mask_years]
+if month_selected:
+    mask_months = videocallusagedf['Mes'].isin(month_selected)
+    videocallusagedf = videocallusagedf[mask_months]
+if usergroups_selected:
+    mask_groups = videocallusagedf['VCUserDescription'].isin(usergroups_selected)
+    videocallusagedf = videocallusagedf[mask_groups]
+if especialidad_selected:
+    mask_especialities = videocallusagedf['Speciality'].isin(especialidad_selected)
+    videocallusagedf = videocallusagedf[mask_especialities]
+
+# Agrupamos el df por Mes para generar un bar chart mensual comparativo interanual
+# cy_videocallsdf_date = cy_videocallsdf.groupby('Mes')['videocalls'].sum().reset_index(name ='videocalls')
+if years_selected and len(years_selected) <= 1:
+    xAxisName = "Mes"
+    cy_videocallsdf_date = videocallusagedf.groupby('Mes')['Videocalls'].sum().reset_index(name ='Videocalls')
+else:
+    xAxisName = "Año"
+    cy_videocallsdf_date = videocallusagedf.groupby('Año')['Videocalls'].sum().reset_index(name ='Videocalls')
+
+# Generamos el barchart mensual/anual
+st.subheader('Evolución mensual de Videoconsultas')
+st.bar_chart(cy_videocallsdf_date, x=xAxisName, y="Videocalls", color="#4fa6ff")
+
+
+
+# Charts por especialidad
+
+# Agrupamos el df por Especialidad para generar un bar y pie chart
+cy_videocallsdf_espe = videocallusagedf.groupby('Speciality')['Videocalls'].sum().reset_index(name ='Videocalls') # .sort_values(by='videocalls',ascending=False)
+# cy_videocallsdf_espe = cy_videocallsdf_espe.sort_values(by='videocalls',ascending=False)
+# print(cy_videocallsdf_espe)
+
+cols = st.columns([1, 1])
+
+# Generamos el donut chart por especialidad
+# region_select = alt.selection_point(fields=[videocallusagedf['Speciality'].drop_duplicates()], empty="all")
+with cols[0]:
+    st.subheader('Distribución de Videoconsultas por Especialidad')
+    base = alt.Chart(cy_videocallsdf_espe).mark_bar().encode(
+        theta=alt.Theta("Videocalls", stack=True), 
+        color=alt.Color("Speciality", legend=None).legend()
+        # y=alt.Y('videocalls').stack(True),
+        # x=alt.X('Speciality', sort='y'),
+        # opacity=alt.condition(region_select, alt.value(1), alt.value(0.25))
+    ).properties(width=600)
+
+    pie = base.mark_arc(outerRadius=120, innerRadius=50)
+    # text = base.mark_text(radius=150, size=15).encode(text="Speciality:N")
+
+    pie #+ text
+
+# Generamos el barchart por especialidad
+with cols[1]:
+    st.subheader(' ')
+    st.bar_chart(cy_videocallsdf_espe, x="Speciality", y="Videocalls", color="Speciality")
+
+
