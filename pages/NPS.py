@@ -68,6 +68,7 @@ def MDGetUsageData(conn):
                 FROM "nps"
                 LEFT JOIN "specialities" using ("SpecialityID")
                 WHERE "ApiKey" = 'ccdf91e84fda3ccf'
+                AND try_to_decimal("nps"."SpecialityID") not in (8, 61, 24)
                 GROUP BY 1,2,3,4
             )
             select 
