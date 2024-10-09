@@ -119,7 +119,7 @@ else:
     cy_prescriptionsdf_date = prescriptionusagedf.groupby('Año')['Prescriptions'].sum().reset_index(name ='Prescriptions')
 
 # Generamos el barchart mensual/anual
-st.subheader('Evolución mensual de consultas de prescription')
+st.subheader('Evolución mensual de Recetas Electrónicas')
 st.bar_chart(cy_prescriptionsdf_date, x=xAxisName, y="Prescriptions", color="#4fa6ff")
 
 
@@ -136,7 +136,7 @@ cols = st.columns([1, 1])
 # Generamos el donut chart por especialidad
 # region_select = alt.selection_point(fields=[prescriptionusagedf['Speciality'].drop_duplicates()], empty="all")
 with cols[0]:
-    st.subheader('Distribución de consultas de prescription por Especialidad')
+    st.subheader('Distribución de Recetas Electrónicas por Especialidad')
     base = alt.Chart(cy_prescriptionsdf_espe).mark_bar().encode(
         theta=alt.Theta("Prescriptions", stack=True), 
         color=alt.Color("Speciality", legend=None).legend()

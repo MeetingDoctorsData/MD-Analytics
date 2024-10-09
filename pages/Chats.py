@@ -119,7 +119,7 @@ else:
     cy_chatsdf_date = chatusagedf.groupby('Año')['Chats'].sum().reset_index(name ='Chats')
 
 # Generamos el barchart mensual/anual
-st.subheader('Evolución mensual de consultas de Chat')
+st.subheader('Evolución mensual de consultas Chat')
 st.bar_chart(cy_chatsdf_date, x=xAxisName, y="Chats", color="#4fa6ff")
 
 
@@ -136,7 +136,7 @@ cols = st.columns([1, 1])
 # Generamos el donut chart por especialidad
 # region_select = alt.selection_point(fields=[chatusagedf['Speciality'].drop_duplicates()], empty="all")
 with cols[0]:
-    st.subheader('Distribución de consultas de Chat por Especialidad')
+    st.subheader('Distribución de consultas Chat por Especialidad')
     base = alt.Chart(cy_chatsdf_espe).mark_bar().encode(
         theta=alt.Theta("Chats", stack=True), 
         color=alt.Color("Speciality", legend=None).legend()
