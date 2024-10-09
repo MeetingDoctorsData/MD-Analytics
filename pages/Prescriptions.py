@@ -57,15 +57,14 @@ def MDConnection():
 def MDGetUsageData(conn):
     df = conn.query("""
             SELECT 
-                Year("VcDate") as "Año"
-                , MONTHNAME("VcDate") as "Mes"
-                , "VcUserCustomerGroup" as "VCUserDescription"
+                Year("PrescriptionDate") as "Año"
+                , MONTHNAME("PrescriptionDate") as "Mes"
+                , "PrescriptionUserCustomerGroup"
                 , "specialities"."SpecialityES" as "Speciality"
-                , count(distinct "VcID") as "Videocalls" 
-            FROM "Videocalls"
+                , count(distinct "PrescriptionsPrimaryKey") as "Prescriptions" 
+            FROM "ElectronicPrescriptions"
             LEFT JOIN "specialities" using ("SpecialityID")
             WHERE "ApiKey" = 'ccdf91e84fda3ccf'
-            AND lower("VcStatus") = 'finished'
             GROUP BY 1,2,3,4
             ;
     """)
@@ -81,67 +80,67 @@ st.title('Meeting Doctors Analytics')
 conn = MDConnection()
 
 # Obtenemos los datos de uso directamente del dwh
-videocallusagedf = MDGetUsageData(conn)
-videocallusagedf['VCUserDescription'] = videocallusagedf['VCUserDescription'].str.capitalize()
+prescriptionusagedf = MDGetUsageData(conn)
+prescriptionusagedf['PrescriptionUserCustomerGroup'] = prescriptionusagedf['PrescriptionUserCustomerGroup'].str.capitalize()
 
 # Generamos los filtros a partir de los datos de uso
-years_selected = MDMultiselectFilter("Año",videocallusagedf.sort_values(by="Año", ascending=False)['Año'].unique())
+years_selected = MDMultiselectFilter("Año",prescriptionusagedf.sort_values(by="Año", ascending=False)['Año'].unique())
 # Ordenamos el df para poder mostrarlo correctamente
 months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
-videocallusagedf['Mes'] = pd.Categorical(videocallusagedf['Mes'], categories=months, ordered=True)
-month_selected = MDMultiselectFilter("Mes",videocallusagedf.sort_values(by="Mes", ascending=True)['Mes'].unique())
-usergroups_selected = MDMultiselectFilter("Grupos de usuario",videocallusagedf['VCUserDescription'].unique())
-especialidad_selected = MDMultiselectFilter("Especialidad",videocallusagedf['Speciality'].unique())
+prescriptionusagedf['Mes'] = pd.Categorical(prescriptionusagedf['Mes'], categories=months, ordered=True)
+month_selected = MDMultiselectFilter("Mes",prescriptionusagedf.sort_values(by="Mes", ascending=True)['Mes'].unique())
+usergroups_selected = MDMultiselectFilter("Grupos de usuario",prescriptionusagedf['PrescriptionUserCustomerGroup'].unique())
+especialidad_selected = MDMultiselectFilter("Especialidad",prescriptionusagedf['Speciality'].unique())
 
 # Seteamos los campos a su tipo de dato correspondiente
-# videocallusagedf["SpecialityID"] = pd.to_numeric(videocallusagedf['SpecialityID'])
+# prescriptionusagedf["SpecialityID"] = pd.to_numeric(prescriptionusagedf['SpecialityID'])
 
 # Pregutamos si hay algun filtro realizado, en caso de tenerlo, lo aplicamos al dataset para generar los gráficos
 if years_selected:
-    mask_years = videocallusagedf['Año'].isin(years_selected)
-    videocallusagedf = videocallusagedf[mask_years]
+    mask_years = prescriptionusagedf['Año'].isin(years_selected)
+    prescriptionusagedf = prescriptionusagedf[mask_years]
 if month_selected:
-    mask_months = videocallusagedf['Mes'].isin(month_selected)
-    videocallusagedf = videocallusagedf[mask_months]
+    mask_months = prescriptionusagedf['Mes'].isin(month_selected)
+    prescriptionusagedf = prescriptionusagedf[mask_months]
 if usergroups_selected:
-    mask_groups = videocallusagedf['VCUserDescription'].isin(usergroups_selected)
-    videocallusagedf = videocallusagedf[mask_groups]
+    mask_groups = prescriptionusagedf['PrescriptionUserCustomerGroup'].isin(usergroups_selected)
+    prescriptionusagedf = prescriptionusagedf[mask_groups]
 if especialidad_selected:
-    mask_specialities = videocallusagedf['Speciality'].isin(especialidad_selected)
-    videocallusagedf = videocallusagedf[mask_specialities]
+    mask_specialities = prescriptionusagedf['Speciality'].isin(especialidad_selected)
+    prescriptionusagedf = prescriptionusagedf[mask_specialities]
 
 # Agrupamos el df por Mes para generar un bar chart mensual comparativo interanual
-# cy_videocallsdf_date = cy_videocallsdf.groupby('Mes')['videocalls'].sum().reset_index(name ='videocalls')
+# cy_prescriptionsdf_date = cy_prescriptionsdf.groupby('Mes')['prescriptions'].sum().reset_index(name ='prescriptions')
 if years_selected and len(years_selected) <= 1:
     xAxisName = "Mes"
-    cy_videocallsdf_date = videocallusagedf.groupby('Mes')['Videocalls'].sum().reset_index(name ='Videocalls')
+    cy_prescriptionsdf_date = prescriptionusagedf.groupby('Mes')['Prescriptions'].sum().reset_index(name ='Prescriptions')
 else:
     xAxisName = "Año"
-    cy_videocallsdf_date = videocallusagedf.groupby('Año')['Videocalls'].sum().reset_index(name ='Videocalls')
+    cy_prescriptionsdf_date = prescriptionusagedf.groupby('Año')['Prescriptions'].sum().reset_index(name ='Prescriptions')
 
 # Generamos el barchart mensual/anual
-st.subheader('Evolución mensual de Videoconsultas')
-st.bar_chart(cy_videocallsdf_date, x=xAxisName, y="Videocalls", color="#4fa6ff")
+st.subheader('Evolución mensual de consultas de prescription')
+st.bar_chart(cy_prescriptionsdf_date, x=xAxisName, y="Prescriptions", color="#4fa6ff")
 
 
 
 # Charts por especialidad
 
 # Agrupamos el df por Especialidad para generar un bar y pie chart
-cy_videocallsdf_espe = videocallusagedf.groupby('Speciality')['Videocalls'].sum().reset_index(name ='Videocalls') # .sort_values(by='videocalls',ascending=False)
-# cy_videocallsdf_espe = cy_videocallsdf_espe.sort_values(by='videocalls',ascending=False)
-# print(cy_videocallsdf_espe)
+cy_prescriptionsdf_espe = prescriptionusagedf.groupby('Speciality')['Prescriptions'].sum().reset_index(name ='Prescriptions') # .sort_values(by='prescriptions',ascending=False)
+# cy_prescriptionsdf_espe = cy_prescriptionsdf_espe.sort_values(by='prescriptions',ascending=False)
+# print(cy_prescriptionsdf_espe)
 
 cols = st.columns([1, 1])
 
 # Generamos el donut chart por especialidad
-# region_select = alt.selection_point(fields=[videocallusagedf['Speciality'].drop_duplicates()], empty="all")
+# region_select = alt.selection_point(fields=[prescriptionusagedf['Speciality'].drop_duplicates()], empty="all")
 with cols[0]:
-    st.subheader('Distribución de Videoconsultas por Especialidad')
-    base = alt.Chart(cy_videocallsdf_espe).mark_bar().encode(
-        theta=alt.Theta("Videocalls", stack=True), 
+    st.subheader('Distribución de consultas de prescription por Especialidad')
+    base = alt.Chart(cy_prescriptionsdf_espe).mark_bar().encode(
+        theta=alt.Theta("Prescriptions", stack=True), 
         color=alt.Color("Speciality", legend=None).legend()
-        # y=alt.Y('videocalls').stack(True),
+        # y=alt.Y('prescriptions').stack(True),
         # x=alt.X('Speciality', sort='y'),
         # opacity=alt.condition(region_select, alt.value(1), alt.value(0.25))
     ).properties(width=500)
@@ -154,6 +153,5 @@ with cols[0]:
 # Generamos el barchart por especialidad
 with cols[1]:
     st.subheader(' ')
-    st.bar_chart(cy_videocallsdf_espe, x="Speciality", y="Videocalls", color="Speciality")
-
-
+    st.bar_chart(cy_prescriptionsdf_espe, x="Speciality", y="Prescriptions", color="Speciality")
+    

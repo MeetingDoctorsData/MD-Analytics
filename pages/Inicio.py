@@ -32,6 +32,9 @@ def MDSidebar():
     st.sidebar.page_link("pages/Inicio.py", label="Inicio")
     st.sidebar.page_link("pages/Chats.py", label="Chats")
     st.sidebar.page_link("pages/Videocalls.py", label="Videocalls")
+    st.sidebar.page_link("pages/Prescriptions.py", label="Prescriptions")
+    st.sidebar.page_link("pages/Installations.py", label="Installations")
+    st.sidebar.page_link("pages/Registrations.py", label="Registrations")
     st.sidebar.page_link("pages/NPS.py", label="NPS")
 
 def MDFilters(usersdf, specialitiesdf):

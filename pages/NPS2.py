@@ -29,7 +29,7 @@ def MDSetAppCFG():
 
 def MDSidebar():
     image = Image.open("images/logos/MDLogo.png")
-    st.sidebar.image(image) 
+    st.sidebar.image(image)
     st.sidebar.header("Servicios")
     st.sidebar.page_link("pages/Inicio.py", label="Inicio")
     st.sidebar.page_link("pages/Chats.py", label="Chats")
@@ -95,17 +95,28 @@ surveyusagedf['NpsUserDescription'] = surveyusagedf['NpsUserDescription'].str.ca
 
 # Generamos los filtros a partir de los datos de uso
 # Preguntamos si hay filtros de Años aplicados en otra Page
-years_selected = MDMultiselectFilter("Año",surveyusagedf.sort_values(by="Año", ascending=False)['Año'].unique())
+if 'years_selected' not in st.session_state:
+    years_selected = MDMultiselectFilter("Año",surveyusagedf.sort_values(by="Año", ascending=False)['Año'].unique())
+else:
+    years_selected = st.session_state['years_selected']
 # Preguntamos si hay filtros de Meses aplicados en otra Page
-# Ordenamos el df para poder mostrarlo correctamente
-months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
-surveyusagedf['Mes'] = pd.Categorical(surveyusagedf['Mes'], categories=months, ordered=True)
-month_selected = MDMultiselectFilter("Mes",surveyusagedf.sort_values(by="Mes", ascending=True)['Mes'].unique())
+if 'month_selected' not in st.session_state:
+    # Ordenamos el df para poder mostrarlo correctamente
+    months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+    surveyusagedf['Mes'] = pd.Categorical(surveyusagedf['Mes'], categories=months, ordered=True)
+    month_selected = MDMultiselectFilter("Mes",surveyusagedf.sort_values(by="Mes", ascending=True)['Mes'].unique())
+else:
+    month_selected = st.session_state['month_selected']
 # Preguntamos si hay filtros de UserGroups aplicados en otra Page
-usergroups_selected = MDMultiselectFilter("Grupos de usuario",surveyusagedf['NpsUserDescription'].unique())
+if 'usergroups_selected' not in st.session_state:
+    usergroups_selected = MDMultiselectFilter("Grupos de usuario",surveyusagedf['NpsUserDescription'].unique())
+else:
+    usergroups_selected = st.session_state['usergroups_selected']
 # Preguntamos si hay filtros de especialidad aplicados en otra Page
-especialidad_selected = MDMultiselectFilter("Especialidad",surveyusagedf['Speciality'].unique())
-
+if 'especialidad_selected' not in st.session_state:
+    especialidad_selected = MDMultiselectFilter("Especialidad",surveyusagedf['Speciality'].unique())
+else:
+    especialidad_selected = st.session_state['especialidad_selected']
 
 
 # Seteamos los campos a su tipo de dato correspondiente
@@ -115,15 +126,26 @@ especialidad_selected = MDMultiselectFilter("Especialidad",surveyusagedf['Specia
 if years_selected:
     mask_years = surveyusagedf['Año'].isin(years_selected)
     surveyusagedf = surveyusagedf[mask_years]
+    st.session_state['years_selected'] = years_selected
 if month_selected:
     mask_months = surveyusagedf['Mes'].isin(month_selected)
     surveyusagedf = surveyusagedf[mask_months]
+    st.session_state['month_selected'] = month_selected
 if usergroups_selected:
     mask_groups = surveyusagedf['NpsUserDescription'].isin(usergroups_selected)
     surveyusagedf = surveyusagedf[mask_groups]
+    st.session_state['usergroups_selected'] = usergroups_selected
 if especialidad_selected:
-    mask_specialities = surveyusagedf['Speciality'].isin(especialidad_selected)
-    surveyusagedf = surveyusagedf[mask_specialities]
+    mask_especialities = surveyusagedf['Speciality'].isin(especialidad_selected)
+    surveyusagedf = surveyusagedf[mask_especialities]
+    st.session_state['especialidad_selected'] = especialidad_selected
+
+# Boton para hacer reset de los filtros
+if st.sidebar.button("Reset filters"):
+    del st.session_state['years_selected']
+    del st.session_state['month_selected']
+    del st.session_state['usergroups_selected']
+    del st.session_state['especialidad_selected']
 
 # Agrupamos el df por Mes para generar un bar chart mensual comparativo interanual
 # cy_surveysdf_date = cy_surveysdf.groupby('Mes')['surveys'].sum().reset_index(name ='surveys')
@@ -159,7 +181,7 @@ with cols[0]:
         # y=alt.Y('surveys').stack(True),
         # x=alt.X('Speciality', sort='y'),
         # opacity=alt.condition(region_select, alt.value(1), alt.value(0.25))
-    ).properties(width=500)
+    ).properties(width=600)
 
     pie = base.mark_arc(outerRadius=120, innerRadius=50)
     # text = base.mark_text(radius=150, size=15).encode(text="Speciality:N")

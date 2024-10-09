@@ -34,6 +34,9 @@ def MDSidebar():
     st.sidebar.page_link("pages/Inicio.py", label="Inicio")
     st.sidebar.page_link("pages/Chats.py", label="Chats")
     st.sidebar.page_link("pages/Videocalls.py", label="Videocalls")
+    st.sidebar.page_link("pages/Prescriptions.py", label="Prescriptions")
+    st.sidebar.page_link("pages/Installations.py", label="Installations")
+    st.sidebar.page_link("pages/Registrations.py", label="Registrations")
     st.sidebar.page_link("pages/NPS.py", label="NPS")
     st.sidebar.header("Filtros")
 
@@ -103,8 +106,8 @@ if usergroups_selected:
     mask_groups = chatusagedf['ConsultationUserDescription'].isin(usergroups_selected)
     chatusagedf = chatusagedf[mask_groups]
 if especialidad_selected:
-    mask_especialities = chatusagedf['Speciality'].isin(especialidad_selected)
-    chatusagedf = chatusagedf[mask_especialities]
+    mask_specialities = chatusagedf['Speciality'].isin(especialidad_selected)
+    chatusagedf = chatusagedf[mask_specialities]
 
 # Agrupamos el df por Mes para generar un bar chart mensual comparativo interanual
 # cy_chatsdf_date = cy_chatsdf.groupby('Mes')['Chats'].sum().reset_index(name ='Chats')
@@ -140,7 +143,7 @@ with cols[0]:
         # y=alt.Y('Chats').stack(True),
         # x=alt.X('Speciality', sort='y'),
         # opacity=alt.condition(region_select, alt.value(1), alt.value(0.25))
-    ).properties(width=600)
+    ).properties(width=500)
 
     pie = base.mark_arc(outerRadius=120, innerRadius=50)
     # text = base.mark_text(radius=150, size=15).encode(text="Speciality:N")

@@ -57,15 +57,18 @@ def MDConnection():
 def MDGetUsageData(conn):
     df = conn.query("""
             SELECT 
-                Year("VcDate") as "Año"
-                , MONTHNAME("VcDate") as "Mes"
-                , "VcUserCustomerGroup" as "VCUserDescription"
-                , "specialities"."SpecialityES" as "Speciality"
-                , count(distinct "VcID") as "Videocalls" 
-            FROM "Videocalls"
-            LEFT JOIN "specialities" using ("SpecialityID")
+                Year(try_cast("InstallDate" as date)) as "Año"
+                , MONTHNAME(try_cast("InstallDate" as date)) as "Mes"
+                , case 
+                    when "InstallUserCustomerGroup" is null 
+                    or "InstallUserCustomerGroup" = '' 
+                        then 'N/A' 
+                    else "InstallUserCustomerGroup" 
+                end as "InstallUserCustomerGroup"
+                , "InstallOsName" as "SistemaOperativo"
+                , count(distinct "InstallID") as "Installs" 
+            FROM "installations"
             WHERE "ApiKey" = 'ccdf91e84fda3ccf'
-            AND lower("VcStatus") = 'finished'
             GROUP BY 1,2,3,4
             ;
     """)
@@ -81,67 +84,67 @@ st.title('Meeting Doctors Analytics')
 conn = MDConnection()
 
 # Obtenemos los datos de uso directamente del dwh
-videocallusagedf = MDGetUsageData(conn)
-videocallusagedf['VCUserDescription'] = videocallusagedf['VCUserDescription'].str.capitalize()
+installusagedf = MDGetUsageData(conn)
+installusagedf['InstallUserCustomerGroup'] = installusagedf['InstallUserCustomerGroup'].str.capitalize()
 
 # Generamos los filtros a partir de los datos de uso
-years_selected = MDMultiselectFilter("Año",videocallusagedf.sort_values(by="Año", ascending=False)['Año'].unique())
+years_selected = MDMultiselectFilter("Año",installusagedf.sort_values(by="Año", ascending=False)['Año'].unique())
 # Ordenamos el df para poder mostrarlo correctamente
 months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
-videocallusagedf['Mes'] = pd.Categorical(videocallusagedf['Mes'], categories=months, ordered=True)
-month_selected = MDMultiselectFilter("Mes",videocallusagedf.sort_values(by="Mes", ascending=True)['Mes'].unique())
-usergroups_selected = MDMultiselectFilter("Grupos de usuario",videocallusagedf['VCUserDescription'].unique())
-especialidad_selected = MDMultiselectFilter("Especialidad",videocallusagedf['Speciality'].unique())
+installusagedf['Mes'] = pd.Categorical(installusagedf['Mes'], categories=months, ordered=True)
+month_selected = MDMultiselectFilter("Mes",installusagedf.sort_values(by="Mes", ascending=True)['Mes'].unique())
+usergroups_selected = MDMultiselectFilter("Grupos de usuario",installusagedf['InstallUserCustomerGroup'].unique())
+sistemaoperativo_selected = MDMultiselectFilter("Sistema Operativo",installusagedf['SistemaOperativo'].unique())
 
 # Seteamos los campos a su tipo de dato correspondiente
-# videocallusagedf["SpecialityID"] = pd.to_numeric(videocallusagedf['SpecialityID'])
+# installusagedf["SpecialityID"] = pd.to_numeric(installusagedf['SpecialityID'])
 
 # Pregutamos si hay algun filtro realizado, en caso de tenerlo, lo aplicamos al dataset para generar los gráficos
 if years_selected:
-    mask_years = videocallusagedf['Año'].isin(years_selected)
-    videocallusagedf = videocallusagedf[mask_years]
+    mask_years = installusagedf['Año'].isin(years_selected)
+    installusagedf = installusagedf[mask_years] 
 if month_selected:
-    mask_months = videocallusagedf['Mes'].isin(month_selected)
-    videocallusagedf = videocallusagedf[mask_months]
+    mask_months = installusagedf['Mes'].isin(month_selected)
+    installusagedf = installusagedf[mask_months]
 if usergroups_selected:
-    mask_groups = videocallusagedf['VCUserDescription'].isin(usergroups_selected)
-    videocallusagedf = videocallusagedf[mask_groups]
-if especialidad_selected:
-    mask_specialities = videocallusagedf['Speciality'].isin(especialidad_selected)
-    videocallusagedf = videocallusagedf[mask_specialities]
+    mask_groups = installusagedf['InstallUserCustomerGroup'].isin(usergroups_selected)
+    installusagedf = installusagedf[mask_groups]
+if sistemaoperativo_selected:
+    mask_osnames = installusagedf['SistemaOperativo'].isin(sistemaoperativo_selected)
+    installusagedf = installusagedf[mask_osnames]
 
 # Agrupamos el df por Mes para generar un bar chart mensual comparativo interanual
-# cy_videocallsdf_date = cy_videocallsdf.groupby('Mes')['videocalls'].sum().reset_index(name ='videocalls')
+# cy_installsdf_date = cy_installsdf.groupby('Mes')['installs'].sum().reset_index(name ='installs')
 if years_selected and len(years_selected) <= 1:
     xAxisName = "Mes"
-    cy_videocallsdf_date = videocallusagedf.groupby('Mes')['Videocalls'].sum().reset_index(name ='Videocalls')
+    cy_installsdf_date = installusagedf.groupby('Mes')['Installs'].sum().reset_index(name ='Installs')
 else:
     xAxisName = "Año"
-    cy_videocallsdf_date = videocallusagedf.groupby('Año')['Videocalls'].sum().reset_index(name ='Videocalls')
+    cy_installsdf_date = installusagedf.groupby('Año')['Installs'].sum().reset_index(name ='Installs')
 
 # Generamos el barchart mensual/anual
-st.subheader('Evolución mensual de Videoconsultas')
-st.bar_chart(cy_videocallsdf_date, x=xAxisName, y="Videocalls", color="#4fa6ff")
+st.subheader('Evolución mensual de Instalaciones')
+st.bar_chart(cy_installsdf_date, x=xAxisName, y="Installs", color="#4fa6ff")
 
 
 
 # Charts por especialidad
 
 # Agrupamos el df por Especialidad para generar un bar y pie chart
-cy_videocallsdf_espe = videocallusagedf.groupby('Speciality')['Videocalls'].sum().reset_index(name ='Videocalls') # .sort_values(by='videocalls',ascending=False)
-# cy_videocallsdf_espe = cy_videocallsdf_espe.sort_values(by='videocalls',ascending=False)
-# print(cy_videocallsdf_espe)
+cy_installsdf_os = installusagedf.groupby('SistemaOperativo')['Installs'].sum().reset_index(name ='Installs') # .sort_values(by='Installs',ascending=False)
+# cy_chatsdf_espe = cy_chatsdf_espe.sort_values(by='Installs',ascending=False)
+# print(cy_chatsdf_espe)
 
 cols = st.columns([1, 1])
 
 # Generamos el donut chart por especialidad
-# region_select = alt.selection_point(fields=[videocallusagedf['Speciality'].drop_duplicates()], empty="all")
+# region_select = alt.selection_point(fields=[chatusagedf['Speciality'].drop_duplicates()], empty="all")
 with cols[0]:
-    st.subheader('Distribución de Videoconsultas por Especialidad')
-    base = alt.Chart(cy_videocallsdf_espe).mark_bar().encode(
-        theta=alt.Theta("Videocalls", stack=True), 
-        color=alt.Color("Speciality", legend=None).legend()
-        # y=alt.Y('videocalls').stack(True),
+    st.subheader('Distribución de Instalaciones por Sistema Operativo')
+    base = alt.Chart(cy_installsdf_os).mark_bar().encode(
+        theta=alt.Theta("Installs", stack=True), 
+        color=alt.Color("SistemaOperativo", legend=None).legend()
+        # y=alt.Y('Installs').stack(True),
         # x=alt.X('Speciality', sort='y'),
         # opacity=alt.condition(region_select, alt.value(1), alt.value(0.25))
     ).properties(width=500)
@@ -154,6 +157,5 @@ with cols[0]:
 # Generamos el barchart por especialidad
 with cols[1]:
     st.subheader(' ')
-    st.bar_chart(cy_videocallsdf_espe, x="Speciality", y="Videocalls", color="Speciality")
-
-
+    st.bar_chart(cy_installsdf_os, x="SistemaOperativo", y="Installs", color="SistemaOperativo")
+    
