@@ -2,10 +2,11 @@ import streamlit as st
 import pandas as pd
 import altair as alt
 from PIL import Image
+from collections import Counter
 # from streamlit_dynamic_filters import DynamicFilters
 
 def MDSetAppCFG():
-    st.set_page_config(layout="wide")
+    st.set_page_config(layout="wide", page_title="MeetingDoctors - Analytics", page_icon="https://meetingdoctors.com/app/themes/custom_theme/build/assets/img/icons/icon_meeting.svg")
     custom_html = """
     <div class="banner">
         <img src="https://meetingdoctors.com/app/themes/custom_theme/build/assets/img/logo_meeting_doctors.png" alt="Banner Image">
@@ -35,9 +36,9 @@ def MDSidebar():
     st.sidebar.page_link("pages/Chats.py", label="Chats")
     st.sidebar.page_link("pages/Videocalls.py", label="Videocalls")
     st.sidebar.page_link("pages/Prescriptions.py", label="Prescriptions")
+    st.sidebar.page_link("pages/NPS.py", label="NPS")
     st.sidebar.page_link("pages/Installations.py", label="Installations")
     st.sidebar.page_link("pages/Registrations.py", label="Registrations")
-    st.sidebar.page_link("pages/NPS.py", label="NPS")
     st.sidebar.header("Filtros")
 
 def MDMultiselectFilter (multiselectname, df):
@@ -56,28 +57,19 @@ def MDConnection():
 
 def MDGetUsageData(conn):
     df = conn.query("""
-            with groupings as (
-                SELECT 
-                    Year(try_cast("NpsDate" as date)) as "Año"
-                    , MONTHNAME(try_cast("NpsDate" as date)) as "Mes"
-                    , "NpsUserCustomerGroup" as "NpsUserDescription"
-                    , "specialities"."SpecialityES" as "Speciality"
-                    , count(distinct case when lower("NpsScoreGroup") = 'promoters' then "NpsID" else null end) as "promoters" 
-                    , count(distinct case when lower("NpsScoreGroup") = 'detractors' then "NpsID" else null end) as "detractors" 
-                    , count(distinct "NpsID") as "surveys" 
-                FROM "nps"
-                LEFT JOIN "specialities" using ("SpecialityID")
-                WHERE "ApiKey" = 'ccdf91e84fda3ccf'
-                AND try_to_decimal("nps"."SpecialityID") not in (8, 61, 24)
-                GROUP BY 1,2,3,4
-            )
-            select 
-                "Año" 
-                , "Mes"
-                , "NpsUserDescription"
-                , "Speciality"
-                , round((("promoters" - "detractors") / "surveys")*100, 0) as "Nps"
-            from groupings
+            SELECT 
+                Year("NpsDate") as "Año"
+                , MONTHNAME("NpsDate") as "Mes"
+                , "NpsUserCustomerGroup" as "NpsUserDescription"
+                , "specialities"."SpecialityES" as "Speciality"
+                , count(distinct case when lower("NpsScoreGroup") = 'promoters' then "NpsID" else null end) as "promoters" 
+                , count(distinct case when lower("NpsScoreGroup") = 'detractors' then "NpsID" else null end) as "detractors" 
+                , count(distinct "NpsID") as "surveys" 
+            FROM "nps"
+            LEFT JOIN "specialities" using ("SpecialityID")
+            WHERE "ApiKey" = 'ccdf91e84fda3ccf'
+            AND try_to_decimal("nps"."SpecialityID") not in (8, 61, 24)
+            GROUP BY 1,2,3,4
     """)
 
     return df
@@ -128,39 +120,61 @@ if especialidad_selected:
 
 # Agrupamos el df por Mes para generar un bar chart mensual comparativo interanual
 # cy_surveysdf_date = cy_surveysdf.groupby('Mes')['surveys'].sum().reset_index(name ='surveys')
+surveyusagedf["Año"] = surveyusagedf["Año"].astype(str)
 if years_selected and len(years_selected) <= 1:
     xAxisName = "Mes"
-    cy_surveysdf_date = surveyusagedf.groupby('Mes')['Nps'].mean().round().reset_index(name ='Nps')
 else:
     xAxisName = "Año"
-    cy_surveysdf_date = surveyusagedf.groupby('Año')['Nps'].mean().round().reset_index(name ='Nps')
+
+cy_surveysdf_date = surveyusagedf.groupby(xAxisName).agg({'promoters':'sum','detractors':'sum','surveys':'sum'})
+cy_surveysdf_date['Nps'] = ((cy_surveysdf_date['promoters'] - cy_surveysdf_date['detractors']) / cy_surveysdf_date['surveys'])*100
+cy_surveysdf_date = cy_surveysdf_date.groupby(xAxisName)['Nps'].mean().round(1).reset_index(name ='Nps')
+
+st.subheader('Evolución de NPS - ' + xAxisName)
 
 # Generamos el barchart mensual/anual
-st.subheader('Evolución mensual de NPS') 
-st.bar_chart(cy_surveysdf_date, x=xAxisName, y="Nps", color="#4fa6ff")
+# st.bar_chart(cy_surveysdf_date, x=xAxisName, y="Nps", color="#4fa6ff")
 
+# Generamos el linechart mensual/anual
+if (cy_surveysdf_date[xAxisName].nunique() == 1) or (len(years_selected) == 1 and len(month_selected) == 1):
+    st.scatter_chart(cy_surveysdf_date, x=xAxisName, y="Nps", color="#4fa6ff", x_label='', y_label='')
+else:
+    st.line_chart(cy_surveysdf_date, x=xAxisName, y="Nps", color="#4fa6ff", x_label='', y_label='') 
+
+# Linechart alternativo
+# line_with_points = alt.Chart(cy_surveysdf_date, width=1035).mark_line(point=True).encode(
+#     x=alt.X(xAxisName),
+#     # x=alt.X(xAxisName).axis(format='.0f', title=xAxisName),
+#     y=alt.Y("Nps"),
+#     color=alt.ColorValue("#4fa6ff")
+# )
+
+# line_with_points
 
 
 # Charts por especialidad
 
 # Agrupamos el df por Especialidad para generar un bar y pie chart
-cy_surveysdf_espe = surveyusagedf.groupby('Speciality')['Nps'].mean().round().reset_index(name ='Nps') # .sort_values(by='surveys',ascending=False)
+cy_surveysdf_espe = surveyusagedf.groupby('Speciality').agg({'promoters':'sum','detractors':'sum','surveys':'sum'})
+cy_surveysdf_espe['Nps'] = ((cy_surveysdf_espe['promoters'] - cy_surveysdf_espe['detractors']) / cy_surveysdf_espe['surveys'])*100
+cy_surveysdf_espe = cy_surveysdf_espe.groupby('Speciality')['Nps'].mean().round(1).reset_index(name ='Nps') # .sort_values(by='surveys',ascending=False)
 # cy_surveysdf_espe = cy_surveysdf_espe.sort_values(by='surveys',ascending=False)
 # print(cy_surveysdf_espe)
+
+st.subheader('Distribución de NPS por Especialidad')
 
 cols = st.columns([1, 1])
 
 # Generamos el donut chart por especialidad
 # region_select = alt.selection_point(fields=[surveyusagedf['Speciality'].drop_duplicates()], empty="all")
 with cols[0]:
-    st.subheader('Distribución de NPS por Especialidad')
     base = alt.Chart(cy_surveysdf_espe).mark_bar().encode(
         theta=alt.Theta("Nps", stack=True), 
         color=alt.Color("Speciality", legend=None).legend()
         # y=alt.Y('surveys').stack(True),
         # x=alt.X('Speciality', sort='y'),
         # opacity=alt.condition(region_select, alt.value(1), alt.value(0.25))
-    ).properties(width=500)
+    ).properties(width=600)
 
     pie = base.mark_arc(outerRadius=120, innerRadius=50)
     # text = base.mark_text(radius=150, size=15).encode(text="Speciality:N")
@@ -170,5 +184,14 @@ with cols[0]:
 # Generamos el barchart por especialidad
 with cols[1]:
     st.subheader(' ')
-    st.bar_chart(cy_surveysdf_espe, x="Speciality", y="Nps", color="Speciality")
-    # st.button('kk') 
+    # st.bar_chart(cy_surveysdf_espe, x="Speciality", y="Nps", color="Speciality")
+    
+    base2 = alt.Chart(cy_surveysdf_espe).mark_bar().encode(
+        alt.X("Speciality", axis=alt.Axis(title='')),
+        alt.Y("Nps", axis=alt.Axis(title='')),
+        alt.Color("Speciality").legend(None)
+    ).properties(
+        width=700
+    )
+    
+    base2

@@ -5,7 +5,7 @@ from PIL import Image
 # from streamlit_dynamic_filters import DynamicFilters
 
 def MDSetAppCFG():
-    st.set_page_config(layout="wide")
+    st.set_page_config(layout="wide", page_title="MeetingDoctors - Analytics", page_icon="https://meetingdoctors.com/app/themes/custom_theme/build/assets/img/icons/icon_meeting.svg")
     custom_html = """
     <div class="banner">
         <img src="https://meetingdoctors.com/app/themes/custom_theme/build/assets/img/logo_meeting_doctors.png" alt="Banner Image">
@@ -35,9 +35,9 @@ def MDSidebar():
     st.sidebar.page_link("pages/Chats.py", label="Chats")
     st.sidebar.page_link("pages/Videocalls.py", label="Videocalls")
     st.sidebar.page_link("pages/Prescriptions.py", label="Prescriptions")
+    st.sidebar.page_link("pages/NPS.py", label="NPS")
     st.sidebar.page_link("pages/Installations.py", label="Installations")
     st.sidebar.page_link("pages/Registrations.py", label="Registrations")
-    st.sidebar.page_link("pages/NPS.py", label="NPS")
     st.sidebar.header("Filtros")
 
 def MDMultiselectFilter (multiselectname, df):
@@ -107,14 +107,14 @@ if usergroups_selected:
 # cy_chatsdf_date = cy_chatsdf.groupby('Mes')['Chats'].sum().reset_index(name ='Chats')
 if years_selected and len(years_selected) <= 1:
     xAxisName = "Mes"
-    cy_chatsdf_date = chatusagedf.groupby('Mes')['Registers'].sum().reset_index(name ='Registers')
 else:
     xAxisName = "Año"
-    cy_chatsdf_date = chatusagedf.groupby('Año')['Registers'].sum().reset_index(name ='Registers')
+
+cy_chatsdf_date = chatusagedf.groupby(xAxisName)['Registers'].sum().reset_index(name ='Registers')
 
 # Generamos el barchart mensual/anual
-st.subheader('Evolución mensual de Registros')
-st.bar_chart(cy_chatsdf_date, x=xAxisName, y="Registers", color="#4fa6ff")
+st.subheader('Evolución de Registros - ' + xAxisName)
+st.bar_chart(cy_chatsdf_date, x=xAxisName, y="Registers", color="#4fa6ff", x_label='', y_label='')
 
 
 
@@ -125,19 +125,20 @@ cy_chatsdf_grupo = chatusagedf.groupby('RegisterUserCustomerGroup')['Registers']
 # cy_chatsdf_espe = cy_chatsdf_espe.sort_values(by='Registers',ascending=False)
 # print(cy_chatsdf_espe)
 
+st.subheader('Distribución de Registros por Grupos de Usuario')
+
 cols = st.columns([1, 1])
 
 # Generamos el donut chart por especialidad
 # region_select = alt.selection_point(fields=[chatusagedf['Speciality'].drop_duplicates()], empty="all")
 with cols[0]:
-    st.subheader('Distribución de Registros por Grupos de Usuario')
     base = alt.Chart(cy_chatsdf_grupo).mark_bar().encode(
         theta=alt.Theta("Registers", stack=True), 
-        color=alt.Color("RegisterUserCustomerGroup", legend=None).legend()
+        color=alt.Color("RegisterUserCustomerGroup").legend(title='Customer Group')
         # y=alt.Y('Registers').stack(True),
         # x=alt.X('Speciality', sort='y'),
         # opacity=alt.condition(region_select, alt.value(1), alt.value(0.25))
-    ).properties(width=500)
+    ).properties(width=600)
 
     pie = base.mark_arc(outerRadius=120, innerRadius=50)
     # text = base.mark_text(radius=150, size=15).encode(text="Speciality:N")
@@ -147,5 +148,14 @@ with cols[0]:
 # Generamos el barchart por especialidad
 with cols[1]:
     st.subheader(' ')
-    st.bar_chart(cy_chatsdf_grupo, x="RegisterUserCustomerGroup", y="Registers", color="RegisterUserCustomerGroup")
+    # st.bar_chart(cy_chatsdf_grupo, x="RegisterUserCustomerGroup", y="Registers", color="RegisterUserCustomerGroup")
     
+    base2 = alt.Chart(cy_chatsdf_grupo).mark_bar().encode(
+        alt.X("RegisterUserCustomerGroup", axis=alt.Axis(title='')),
+        alt.Y("Registers", axis=alt.Axis(title='')),
+        alt.Color("RegisterUserCustomerGroup").legend(None)
+    ).properties(
+        width=700
+    )
+    
+    base2

@@ -4,8 +4,9 @@ import altair as alt
 from PIL import Image
 # from streamlit_dynamic_filters import DynamicFilters
 
+
 def MDSetAppCFG():
-    st.set_page_config(layout="wide")
+    st.set_page_config(layout="wide", page_title="MeetingDoctors - Analytics", page_icon="https://meetingdoctors.com/app/themes/custom_theme/build/assets/img/icons/icon_meeting.svg")
     custom_html = """
     <div class="banner">
         <img src="https://meetingdoctors.com/app/themes/custom_theme/build/assets/img/logo_meeting_doctors.png" alt="Banner Image">
@@ -35,9 +36,9 @@ def MDSidebar():
     st.sidebar.page_link("pages/Chats.py", label="Chats")
     st.sidebar.page_link("pages/Videocalls.py", label="Videocalls")
     st.sidebar.page_link("pages/Prescriptions.py", label="Prescriptions")
+    st.sidebar.page_link("pages/NPS.py", label="NPS")
     st.sidebar.page_link("pages/Installations.py", label="Installations")
     st.sidebar.page_link("pages/Registrations.py", label="Registrations")
-    st.sidebar.page_link("pages/NPS.py", label="NPS")
     st.sidebar.header("Filtros")
 
 def MDMultiselectFilter (multiselectname, df):
@@ -71,8 +72,10 @@ def MDGetUsageData(conn):
 
     return df
 
+
 MDSetAppCFG()
 MDSidebar()
+
 
 st.title('Meeting Doctors Analytics')
 
@@ -111,17 +114,17 @@ if especialidad_selected:
 
 # Agrupamos el df por Mes para generar un bar chart mensual comparativo interanual
 # cy_chatsdf_date = cy_chatsdf.groupby('Mes')['Chats'].sum().reset_index(name ='Chats')
+chatusagedf["Año"] = chatusagedf["Año"].astype(str)
 if years_selected and len(years_selected) <= 1:
     xAxisName = "Mes"
-    cy_chatsdf_date = chatusagedf.groupby('Mes')['Chats'].sum().reset_index(name ='Chats')
 else:
     xAxisName = "Año"
-    cy_chatsdf_date = chatusagedf.groupby('Año')['Chats'].sum().reset_index(name ='Chats')
+
+cy_chatsdf_date = chatusagedf.groupby(xAxisName)['Chats'].sum().reset_index(name ='Chats')
 
 # Generamos el barchart mensual/anual
-st.subheader('Evolución mensual de consultas Chat')
-st.bar_chart(cy_chatsdf_date, x=xAxisName, y="Chats", color="#4fa6ff")
-
+st.subheader('Evolución de consultas Chat - ' + xAxisName)
+st.bar_chart(cy_chatsdf_date, x=xAxisName, y="Chats", color="#4fa6ff", x_label='', y_label='')
 
 
 # Charts por especialidad
@@ -131,27 +134,39 @@ cy_chatsdf_espe = chatusagedf.groupby('Speciality')['Chats'].sum().reset_index(n
 # cy_chatsdf_espe = cy_chatsdf_espe.sort_values(by='Chats',ascending=False)
 # print(cy_chatsdf_espe)
 
+
+st.subheader('Distribución de consultas Chat por Especialidad')
+
 cols = st.columns([1, 1])
 
 # Generamos el donut chart por especialidad
 # region_select = alt.selection_point(fields=[chatusagedf['Speciality'].drop_duplicates()], empty="all")
 with cols[0]:
-    st.subheader('Distribución de consultas Chat por Especialidad')
     base = alt.Chart(cy_chatsdf_espe).mark_bar().encode(
         theta=alt.Theta("Chats", stack=True), 
-        color=alt.Color("Speciality", legend=None).legend()
+        color=alt.Color("Speciality").legend()
         # y=alt.Y('Chats').stack(True),
         # x=alt.X('Speciality', sort='y'),
         # opacity=alt.condition(region_select, alt.value(1), alt.value(0.25))
-    ).properties(width=500)
+    ).properties(width=600)
 
     pie = base.mark_arc(outerRadius=120, innerRadius=50)
-    # text = base.mark_text(radius=150, size=15).encode(text="Speciality:N")
+    # text = base.mark_text(radius=150, size=15).encode(text="Speciality")
 
     pie #+ text
 
 # Generamos el barchart por especialidad
 with cols[1]:
-    st.subheader(' ')
-    st.bar_chart(cy_chatsdf_espe, x="Speciality", y="Chats", color="Speciality")
-    # st.button('kk')
+    st.subheader('')
+    # st.bar_chart(cy_chatsdf_espe, x="Speciality", y="Chats", color="Speciality", x_label='', y_label='')
+
+    base2 = alt.Chart(cy_chatsdf_espe).mark_bar().encode(
+        alt.X("Speciality", axis=alt.Axis(title='')),
+        alt.Y("Chats", axis=alt.Axis(title='')),
+        alt.Color("Speciality").legend(None)
+    ).properties(
+        width=700,
+        title=''
+    )
+    
+    base2

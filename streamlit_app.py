@@ -3,7 +3,7 @@ from PIL import Image
 # from streamlit_dynamic_filters import DynamicFilters
 
 def MDSetAppCFG():
-    st.set_page_config(layout="wide", page_title="Inicio")
+    st.set_page_config(layout="wide", page_title="MeetingDoctors - Analytics", page_icon="https://meetingdoctors.com/app/themes/custom_theme/build/assets/img/icons/icon_meeting.svg")
     custom_html = """
     <div class="banner">
         <img src="https://meetingdoctors.com/app/themes/custom_theme/build/assets/img/logo_meeting_doctors.png" alt="Banner Image">
@@ -33,9 +33,9 @@ def MDSidebar():
     st.sidebar.page_link("pages/Chats.py", label="Chats")
     st.sidebar.page_link("pages/Videocalls.py", label="Videocalls")
     st.sidebar.page_link("pages/Prescriptions.py", label="Prescriptions")
+    st.sidebar.page_link("pages/NPS.py", label="NPS")
     st.sidebar.page_link("pages/Installations.py", label="Installations")
     st.sidebar.page_link("pages/Registrations.py", label="Registrations")
-    st.sidebar.page_link("pages/NPS.py", label="NPS")
 
 def MDFilters(usersdf, specialitiesdf):
     st.sidebar.header("Filtros")
@@ -83,7 +83,7 @@ st.markdown(
         ### Bienvenido a MD Analytics
         MD Analytics es un app mediante que permite el seguimiento y análisis básico de los distintos servicios contratados.
 
-        👈 Mediante este selector puede seleccionar el servicio que deseas analizar
+        👈 Mediante estos selectores puedes seleccionar el servicio que deseas analizar
 
         **IMPORTANTE: Este dashboard no dispone de datos real-time.** Los datos a analizar siempre son hasta último día cerrado
 
