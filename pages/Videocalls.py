@@ -32,6 +32,7 @@ def MDSidebar():
     st.sidebar.image(image)
     st.sidebar.header("Servicios")
     st.sidebar.page_link("pages/Inicio.py", label="Inicio")
+    st.sidebar.page_link("pages/Resumen.py", label="Resumen")
     st.sidebar.page_link("pages/Chats.py", label="Chats")
     st.sidebar.page_link("pages/Videocalls.py", label="Videocalls")
     st.sidebar.page_link("pages/Prescriptions.py", label="Prescriptions")
@@ -56,18 +57,18 @@ def MDConnection():
 
 def MDGetUsageData(conn):
     df = conn.query("""
-            SELECT 
-                Year("VcDate") as "Año"
-                , MONTHNAME("VcDate") as "Mes"
-                , "VcUserCustomerGroup" as "VCUserDescription"
-                , "specialities"."SpecialityES" as "Speciality"
-                , count(distinct "VcID") as "Videocalls" 
-            FROM "Videocalls"
-            LEFT JOIN "specialities" using ("SpecialityID")
-            WHERE "ApiKey" = 'ccdf91e84fda3ccf'
-            AND lower("VcStatus") = 'finished'
-            GROUP BY 1,2,3,4
-            ;
+        SELECT 
+            Year("VcDate") as "Año"
+            , MONTHNAME("VcDate") as "Mes"
+            , "VcUserCustomerGroup" as "VCUserDescription"
+            , "specialities"."SpecialityES" as "Speciality"
+            , count(distinct "VcID") as "Videocalls" 
+        FROM "Videocalls"
+        LEFT JOIN "specialities" using ("SpecialityID")
+        WHERE "ApiKey" = 'ccdf91e84fda3ccf'
+        AND lower("VcStatus") = 'finished'
+        GROUP BY 1,2,3,4
+        ;
     """)
 
     return df

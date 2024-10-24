@@ -1,6 +1,5 @@
 import streamlit as st
 import pandas as pd
-import altair as alt
 from PIL import Image
 # from streamlit_dynamic_filters import DynamicFilters
 
@@ -33,6 +32,7 @@ def MDSidebar():
     st.sidebar.image(image)
     st.sidebar.header("Servicios")
     st.sidebar.page_link("pages/Inicio.py", label="Inicio")
+    st.sidebar.page_link("pages/Resumen.py", label="Resumen")
     st.sidebar.page_link("pages/Chats.py", label="Chats")
     st.sidebar.page_link("pages/Videocalls.py", label="Videocalls")
     st.sidebar.page_link("pages/Prescriptions.py", label="Prescriptions")

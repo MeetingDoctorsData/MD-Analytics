@@ -32,6 +32,7 @@ def MDSidebar():
     st.sidebar.image(image)
     st.sidebar.header("Servicios")
     st.sidebar.page_link("pages/Inicio.py", label="Inicio")
+    st.sidebar.page_link("pages/Resumen.py", label="Resumen")
     st.sidebar.page_link("pages/Chats.py", label="Chats")
     st.sidebar.page_link("pages/Videocalls.py", label="Videocalls")
     st.sidebar.page_link("pages/Prescriptions.py", label="Prescriptions")
@@ -56,15 +57,15 @@ def MDConnection():
 
 def MDGetUsageData(conn):
     df = conn.query("""
-            SELECT 
-                Year(try_cast("RegisterUserDate" as date)) as "Año"
-                , MONTHNAME(try_cast("RegisterUserDate" as date)) as "Mes"
-                , "RegisterUserCustomerGroup"
-                , count(distinct "RegisterUserID") as "Registers" 
-            FROM "Registrations"
-            WHERE "ApiKey" = 'ccdf91e84fda3ccf'
-            GROUP BY 1,2,3
-            ;
+        SELECT 
+            Year(try_cast("RegisterUserDate" as date)) as "Año"
+            , MONTHNAME(try_cast("RegisterUserDate" as date)) as "Mes"
+            , "RegisterUserCustomerGroup"
+            , count(distinct "RegisterUserID") as "Registers" 
+        FROM "Registrations"
+        WHERE "ApiKey" = 'ccdf91e84fda3ccf'
+        GROUP BY 1,2,3
+        ;
     """) 
 
     return df

@@ -1,6 +1,8 @@
 import streamlit as st
+import pandas as pd
 from PIL import Image
 # from streamlit_dynamic_filters import DynamicFilters
+
 
 def MDSetAppCFG():
     st.set_page_config(layout="wide", page_title="MeetingDoctors - Analytics", page_icon="https://meetingdoctors.com/app/themes/custom_theme/build/assets/img/icons/icon_meeting.svg")
@@ -30,31 +32,22 @@ def MDSidebar():
     st.sidebar.image(image)
     st.sidebar.header("Servicios")
     st.sidebar.page_link("pages/Inicio.py", label="Inicio")
+    st.sidebar.page_link("pages/Resumen.py", label="Resumen")
     st.sidebar.page_link("pages/Chats.py", label="Chats")
     st.sidebar.page_link("pages/Videocalls.py", label="Videocalls")
     st.sidebar.page_link("pages/Prescriptions.py", label="Prescriptions")
     st.sidebar.page_link("pages/NPS.py", label="NPS")
     st.sidebar.page_link("pages/Installations.py", label="Installations")
     st.sidebar.page_link("pages/Registrations.py", label="Registrations")
-
-def MDFilters(usersdf, specialitiesdf):
     st.sidebar.header("Filtros")
-    st.sidebar.multiselect(
-        "Año",
-        ["2024", "2023", "2022"]
+
+def MDMultiselectFilter (multiselectname, df):
+    multiselect_df = st.sidebar.multiselect(
+        multiselectname,
+        df
     )
-    st.sidebar.multiselect(
-        "Mes",
-        ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"]
-    )
-    st.sidebar.multiselect(
-        "Grupos de usuario",
-        usersdf
-    )
-    st.sidebar.multiselect(
-        "Especialidad",
-        specialitiesdf
-    )
+
+    return multiselect_df
 
 def MDConnection():
     # Initialize connection.
@@ -62,17 +55,121 @@ def MDConnection():
 
     return conn
 
-def MDGetMasterData(conn, tableName):
-    # Perform query.
-    df = conn.query("SELECT DISTINCT * from "+ chr(34) + tableName + chr(34) +";", ttl=600)
+def MDGetUsagesData(conn):
+    df = conn.query("""
+            SELECT 
+                Year("ChatSentDate") as "Año"
+                , MONTHNAME("ChatSentDate") as "Mes"
+                , "ConsultationUserDescription" as "CustomerGroup"
+                , "specialities"."SpecialityES" as "Speciality"
+                , 'chat' as "Usage"
+                , count(distinct "ChatMsgID") as "UsageAmount" 
+            FROM "ChatConsultations"
+            LEFT JOIN "specialities" using ("SpecialityID")
+            WHERE "ApiKey" = 'ccdf91e84fda3ccf'
+            GROUP BY 1,2,3,4
+            union all
+            SELECT 
+                Year("VcDate") as "Año"
+                , MONTHNAME("VcDate") as "Mes"
+                , "VcUserCustomerGroup" as "CustomerGroup"
+                , "specialities"."SpecialityES" as "Speciality"
+                , 'vc' as "Usage"
+                , count(distinct "VcID") as "UsageAmount" 
+            FROM "Videocalls"
+            LEFT JOIN "specialities" using ("SpecialityID")
+            WHERE "ApiKey" = 'ccdf91e84fda3ccf'
+            AND lower("VcStatus") = 'finished'
+            GROUP BY 1,2,3,4
+            union all
+            SELECT 
+                Year("PrescriptionDate") as "Año"
+                , MONTHNAME("PrescriptionDate") as "Mes"
+                , "PrescriptionUserCustomerGroup" as "CustomerGroup"
+                , "specialities"."SpecialityES" as "Speciality"
+                , 'prescription' as "Usage"
+                , count(distinct "PrescriptionsPrimaryKey") as "UsageAmount" 
+            FROM "ElectronicPrescriptions"
+            LEFT JOIN "specialities" using ("SpecialityID")
+            WHERE "ApiKey" = 'ccdf91e84fda3ccf'
+            GROUP BY 1,2,3,4
+            ;
+    """)
 
     return df
 
-def MDGetFilteredData(conn, tableName):
-    # Perform query.
-    df = conn.query("SELECT DISTINCT * from "+ chr(34) + tableName + chr(34) +" WHERE " + chr(34) + "ApiKey" + chr(34) + " = 'ccdf91e84fda3ccf';", ttl=600)
+def MDGetNpsData(conn):
+    df = conn.query("""
+            SELECT 
+                Year("NpsDate") as "Año"
+                , MONTHNAME("NpsDate") as "Mes"
+                , "NpsUserCustomerGroup" as "CustomerGroup"
+                , "specialities"."SpecialityES" as "Speciality"
+                , count(distinct case when lower("NpsScoreGroup") = 'promoters' then "NpsID" else null end) as "promoters" 
+                , count(distinct case when lower("NpsScoreGroup") = 'detractors' then "NpsID" else null end) as "detractors" 
+                , count(distinct "NpsID") as "surveys" 
+            FROM "nps"
+            LEFT JOIN "specialities" using ("SpecialityID")
+            WHERE "ApiKey" = 'ccdf91e84fda3ccf'
+            AND try_to_decimal("nps"."SpecialityID") not in (8, 61, 24)
+            GROUP BY 1,2,3,4
+    """)
 
     return df
+
+def MDGetInstallsData(conn):
+    df = conn.query("""
+            SELECT 
+                Year(try_cast("InstallDate" as date)) as "Año"
+                , MONTHNAME(try_cast("InstallDate" as date)) as "Mes"
+                , case 
+                    when "InstallUserCustomerGroup" is null 
+                    or "InstallUserCustomerGroup" = '' 
+                        then 'N/A' 
+                    else "InstallUserCustomerGroup" 
+                end as "CustomerGroup"
+                , count(distinct "InstallID") as "Installs" 
+            FROM "installations"
+            WHERE "ApiKey" = 'ccdf91e84fda3ccf'
+            GROUP BY 1,2,3
+            ;
+    """)
+
+    return df
+
+def MDGetregistersData(conn):
+    df = conn.query("""
+            SELECT 
+                Year(try_cast("RegisterUserDate" as date)) as "Año"
+                , MONTHNAME(try_cast("RegisterUserDate" as date)) as "Mes"
+                , "RegisterUserCustomerGroup" as "CustomerGroup"
+                , count(distinct "RegisterUserID") as "Registers" 
+            FROM "Registrations"
+            WHERE "ApiKey" = 'ccdf91e84fda3ccf'
+            GROUP BY 1,2,3
+            ;
+    """) 
+
+    return df
+
+def filter_df(df, column):
+    if years_selected:
+        mask_years = df['Año'].isin(years_selected)
+        df = df[mask_years]
+    if month_selected:
+        mask_months = df['Mes'].isin(month_selected)
+        df = df[mask_months]
+    if usergroups_selected:
+        mask_groups = df['CustomerGroup'].str.capitalize().isin(usergroups_selected)
+        df = df[mask_groups]
+        
+    if column:
+        if especialidad_selected:
+            mask_specialities = df[column].isin(especialidad_selected)
+            df = df[mask_specialities]
+    
+    return df
+
 
 MDSetAppCFG()
 MDSidebar()
@@ -90,10 +187,101 @@ st.markdown(
         *Si tienes cualquier duda o incidencia con el dashboard, ponte en contacto con nuestro equipo de [data](mailto:data@meetingdoctors.com)*
     """
   )
+
+st.subheader('')
 st.subheader('Indicadores generales')
 
-conn = MDConnection()
-specialitiesdf = MDGetMasterData(conn,"specialities")
-usersdf = MDGetFilteredData(conn,"users")
+# conn = MDConnection()
+# specialitiesdf = MDGetMasterData(conn,"specialities")
+# usersdf = MDGetFilteredData(conn,"users")
 
-MDFilters(usersdf["UserCustomerGroup"].str.capitalize().unique(),specialitiesdf["SpecialityES"].unique())
+# MDFilters(usersdf["UserCustomerGroup"].str.capitalize().unique(),specialitiesdf["SpecialityES"].unique())
+
+
+# Nos conectamos a la base de datos
+conn = MDConnection()
+
+
+# Obtenemos los datos de uso directamente del dwh
+usagesdf = MDGetUsagesData(conn)
+npsdf = MDGetNpsData(conn)
+installsdf = MDGetInstallsData(conn)
+registersdf = MDGetregistersData(conn)
+
+
+# Agrupamos los campos Año, Mes y CustomerGroup de todos los DataFrames
+year_month_group_df = pd.DataFrame()
+year_month_group_df[['Año','Mes','CustomerGroup','Speciality']] = pd.concat([usagesdf[['Año','Mes','CustomerGroup','Speciality']]
+                                                 , npsdf[['Año','Mes','CustomerGroup','Speciality']]
+                                                 , installsdf[['Año','Mes','CustomerGroup']]
+                                                 , registersdf[['Año','Mes','CustomerGroup']]]
+                                                 , ignore_index=True)
+
+
+year_month_group_df['CustomerGroup'] = year_month_group_df['CustomerGroup'].str.capitalize()
+
+
+# Generamos los filtros a partir de los datos de uso
+years_selected = MDMultiselectFilter("Año",year_month_group_df.sort_values(by="Año", ascending=False)['Año'].unique())
+# Ordenamos el df para poder mostrarlo correctamente
+months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+year_month_group_df['Mes'] = pd.Categorical(year_month_group_df['Mes'], categories=months, ordered=True)
+month_selected = MDMultiselectFilter("Mes",year_month_group_df.sort_values(by="Mes", ascending=True)['Mes'].unique())
+usergroups_selected = MDMultiselectFilter("Grupos de usuario",year_month_group_df['CustomerGroup'].unique())
+especialidad_selected = MDMultiselectFilter("Especialidad",year_month_group_df['Speciality'].unique())
+
+
+# Agrupamos los DataFrames en una lista para poder trabajrlos uno a uno en un bucle
+dataframes = [[usagesdf, 'usages'],[npsdf, 'nps'],[installsdf, 'installs']]
+
+for current in dataframes:
+    current_df = current[0]
+    current_df_name = current[1]
+
+    # Pregutamos si hay algun filtro realizado, en caso de tenerlo, lo aplicamos al dataset para generar los gráficos
+    if current_df_name == 'installs' or current_df_name == 'registers':
+        current_df = filter_df(current_df, None)
+    else:
+        current_df = filter_df(current_df, 'Speciality')
+
+    # Agrupamos el df por Mes para generar un chart mensual
+    current_df["Año"] = current_df["Año"].astype(str)
+    if years_selected and len(years_selected) <= 1:
+        xAxisName = "Mes"
+    else:
+        xAxisName = "Año"
+
+    if current_df_name == 'usages':
+        # Hacemos un sum agrupando por el Axis X
+        cy_current_df_date = current_df.groupby(xAxisName)['UsageAmount'].sum().reset_index(name ='UsageAmount')
+
+        # Generamos el barchart mensual/anual
+        st.subheader('Evolución de consultas Chat, Videoconsultas y Recetas Electrónicas - ' + xAxisName)
+        st.bar_chart(cy_current_df_date, x=xAxisName, y="UsageAmount", color="#4fa6ff", x_label='', y_label='')
+    
+    elif current_df_name == 'nps':
+        # Sumamos las encuestas agrupadas para calcular el NPS
+        cy_current_df_date = current_df.groupby(xAxisName).agg({'promoters':'sum','detractors':'sum','surveys':'sum'})
+        cy_current_df_date['Nps'] = ((cy_current_df_date['promoters'] - cy_current_df_date['detractors']) / cy_current_df_date['surveys'])*100
+        cy_current_df_date = cy_current_df_date.groupby(xAxisName)['Nps'].mean().round(1).reset_index(name ='Nps')
+
+        # Generamos el linechart mensual/anual
+        st.subheader('Evolución de NPS - ' + xAxisName)
+        if (cy_current_df_date[xAxisName].nunique() == 1) or (len(years_selected) == 1 and len(month_selected) == 1):
+            st.scatter_chart(cy_current_df_date, x=xAxisName, y="Nps", color="#4fa6ff", x_label='', y_label='')
+        else:
+            st.line_chart(cy_current_df_date, x=xAxisName, y="Nps", color="#4fa6ff", x_label='', y_label='') 
+    
+    elif current_df_name == 'installs':
+        # Sumamos el recuento de Instalaciones y Registros para obtener el ratio
+        cy_current_df_date = current_df.groupby(xAxisName)['Installs'].sum().reset_index(name ='Installs')
+        cy_registers_df_date = registersdf.groupby(xAxisName)['Registers'].sum().reset_index(name ='Registers')
+        cy_current_df_date['ratio_regs'] = (cy_registers_df_date['Registers'] * 100) / cy_current_df_date['Installs'] 
+        cy_current_df_date = cy_current_df_date.groupby(xAxisName)['ratio_regs'].mean().round(1).reset_index(name ='ratio_regs')
+
+        # Generamos el linechart mensual/anual
+        st.subheader('Evolución del % de Registros - ' + xAxisName)
+        if (cy_current_df_date[xAxisName].nunique() == 1) or (len(years_selected) == 1 and len(month_selected) == 1):
+            st.scatter_chart(cy_current_df_date, x=xAxisName, y="ratio_regs", color="#4fa6ff", x_label='', y_label='')
+        else:
+            st.line_chart(cy_current_df_date, x=xAxisName, y="ratio_regs", color="#4fa6ff", x_label='', y_label='') 

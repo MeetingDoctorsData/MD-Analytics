@@ -32,6 +32,7 @@ def MDSidebar():
     st.sidebar.image(image)
     st.sidebar.header("Servicios")
     st.sidebar.page_link("pages/Inicio.py", label="Inicio")
+    st.sidebar.page_link("pages/Resumen.py", label="Resumen")
     st.sidebar.page_link("pages/Chats.py", label="Chats")
     st.sidebar.page_link("pages/Videocalls.py", label="Videocalls")
     st.sidebar.page_link("pages/Prescriptions.py", label="Prescriptions")
@@ -56,21 +57,21 @@ def MDConnection():
 
 def MDGetUsageData(conn):
     df = conn.query("""
-            SELECT 
-                Year(try_cast("InstallDate" as date)) as "Año"
-                , MONTHNAME(try_cast("InstallDate" as date)) as "Mes"
-                , case 
-                    when "InstallUserCustomerGroup" is null 
-                    or "InstallUserCustomerGroup" = '' 
-                        then 'N/A' 
-                    else "InstallUserCustomerGroup" 
-                end as "InstallUserCustomerGroup"
-                , "InstallOsName" as "SistemaOperativo"
-                , count(distinct "InstallID") as "Installs" 
-            FROM "installations"
-            WHERE "ApiKey" = 'ccdf91e84fda3ccf'
-            GROUP BY 1,2,3,4
-            ;
+        SELECT 
+            Year(try_cast("InstallDate" as date)) as "Año"
+            , MONTHNAME(try_cast("InstallDate" as date)) as "Mes"
+            , case 
+                when "InstallUserCustomerGroup" is null 
+                or "InstallUserCustomerGroup" = '' 
+                    then 'N/A' 
+                else "InstallUserCustomerGroup" 
+            end as "InstallUserCustomerGroup"
+            , "InstallOsName" as "SistemaOperativo"
+            , count(distinct "InstallID") as "Installs" 
+        FROM "installations"
+        WHERE "ApiKey" = 'ccdf91e84fda3ccf'
+        GROUP BY 1,2,3,4
+        ;
     """)
 
     return df
