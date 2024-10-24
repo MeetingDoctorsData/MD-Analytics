@@ -33,13 +33,13 @@ def MDSidebar():
     st.sidebar.image(image) 
     st.sidebar.header("Servicios")
     st.sidebar.page_link("pages/Inicio.py", label="Inicio")
-    st.sidebar.page_link("pages/Resumen.py", label="Resumen")
     st.sidebar.page_link("pages/Chats.py", label="Chats")
     st.sidebar.page_link("pages/Videocalls.py", label="Videocalls")
     st.sidebar.page_link("pages/Prescriptions.py", label="Prescriptions")
     st.sidebar.page_link("pages/NPS.py", label="NPS")
     st.sidebar.page_link("pages/Installations.py", label="Installations")
     st.sidebar.page_link("pages/Registrations.py", label="Registrations")
+    st.sidebar.page_link("pages/Raw_data.py", label="Raw data")
     st.sidebar.header("Filtros")
 
 def MDMultiselectFilter (multiselectname, df):
