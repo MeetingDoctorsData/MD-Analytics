@@ -28,8 +28,10 @@ def MDSetAppCFG():
             .stAppViewMain [data-testid="stImageContainer"] img {
                 width: 5%;
                 margin-left: auto;
-                margin-right: 0%;
                 margin-bottom: -5%;
+            }
+            .stMarkdown hr {
+                border-color: rgb(79,166,251) !important;
             }
         </style>
         """
@@ -55,6 +57,7 @@ def MDSidebar():
     st.sidebar.page_link("pages/Raw_data.py", label="Raw data", icon="🥩")
     st.sidebar.page_link("pages/Raw_data.py", label="Raw data", icon="⚙️")
     st.sidebar.page_link("pages/Raw_data.py", label="Raw data", icon="🏭")
+    st.sidebar.divider()
     st.sidebar.header("Filtros")
 
 def MDMultiselectFilter (multiselectname, df):
