@@ -4,30 +4,27 @@ from PIL import Image
 # from streamlit_dynamic_filters import DynamicFilters
 
 
+
+
+
 def MDSetAppCFG():
     LogoMini = Image.open("images/logos/MDLogoMini.png")
     st.set_page_config(layout="wide", page_title="MeetingDoctors - Analytics", page_icon=LogoMini)
-    custom_html = """
-    <div class="banner">
-        <img src="https://meetingdoctors.com/app/themes/custom_theme/build/assets/img/logo_meeting_doctors.png" alt="Banner Image">
-    </div>
-    <style>
-        .banner {
-            width: 100%;
-            height: 200px;
-            overflow: hidden;
-            background-color: #001042
-        }
-        .banner img {
-            width: 100%;
-            object-fit: cover;
-            background-color: #001042
-        }
-    </style>
-    """
-    # Display the custom HTML
-    # st.components.v1.html(custom_html)
-
+    st.html(
+        """
+            <style>
+                [data-testid="stSidebarContent"] {
+                    color: rgb(255,255,255);
+                    background-color: rgb(0,16,66);
+                }
+                [data-testid="stSidebarContent"] [data-testid="stMarkdownContainer"],
+                [data-testid="stSidebarContent"] [data-testid="stMarkdownContainer"] h2 {
+                    color: rgb(255,255,255) !important;
+                }
+            </style>
+        """
+    )
+    
 def MDSidebar():
     image = Image.open("images/logos/MDLogo.png")
     st.sidebar.image(image)
@@ -192,12 +189,6 @@ st.markdown(
 st.subheader('')
 st.subheader('Indicadores generales')
 
-# conn = MDConnection()
-# specialitiesdf = MDGetMasterData(conn,"specialities")
-# usersdf = MDGetFilteredData(conn,"users")
-
-# MDFilters(usersdf["UserCustomerGroup"].str.capitalize().unique(),specialitiesdf["SpecialityES"].unique())
-
 
 # Nos conectamos a la base de datos
 conn = MDConnection()
@@ -286,3 +277,4 @@ for current in dataframes:
             st.scatter_chart(cy_current_df_date, x=xAxisName, y="ratio_regs", color="#4fa6ff", x_label='', y_label='')
         else:
             st.line_chart(cy_current_df_date, x=xAxisName, y="ratio_regs", color="#4fa6ff", x_label='', y_label='') 
+
