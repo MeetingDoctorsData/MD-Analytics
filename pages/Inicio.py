@@ -4,9 +4,6 @@ from PIL import Image
 # from streamlit_dynamic_filters import DynamicFilters
 
 
-
-
-
 def MDSetAppCFG():
     LogoMini = Image.open("images/logos/MDLogoMini.png")
     st.set_page_config(layout="wide", page_title="MeetingDoctors - Analytics", page_icon=LogoMini)
@@ -14,7 +11,6 @@ def MDSetAppCFG():
         """
         <style>
             [data-testid="stSidebarContent"] {
-                color: rgb(255,255,255);
                 background-color: rgb(0,16,66);
             }
             [data-testid="stSidebarContent"] [data-testid="stMarkdownContainer"],
@@ -30,8 +26,17 @@ def MDSetAppCFG():
                 margin-left: auto;
                 margin-bottom: -5%;
             }
+            [data-testid="stVerticalBlockBorderWrapper"]:has(.stImage) {
+                border-color: rgb(79,166,251);
+            }
             .stMarkdown hr {
                 border-color: rgb(79,166,251) !important;
+            }
+            [data-testid="stIconMaterial"] {
+                color: rgba(255, 255, 255, 0.7);
+            }
+            [data-testid="stVerticalBlockBorderWrapper"]:has([data-testid="stVegaLiteChart"]) {
+                border-color: rgb(79,166,251);
             }
         </style>
         """
@@ -41,22 +46,14 @@ def MDSidebar():
     image = Image.open("images/logos/MDLogoWhite.png")
     st.sidebar.image(image)
     st.sidebar.header("Servicios")
-    st.sidebar.page_link("pages/Inicio.py", label="Inicio", icon="🏠")
-    st.sidebar.page_link("pages/Chats.py", label="Chats", icon="💬")
-    st.sidebar.page_link("pages/Chats.py", label="Chats", icon="✉️")
-    st.sidebar.page_link("pages/Chats.py", label="Chats", icon="📩")
-    st.sidebar.page_link("pages/Chats.py", label="Chats", icon="📬")
-    st.sidebar.page_link("pages/Videocalls.py", label="Videocalls", icon="🎥")
-    st.sidebar.page_link("pages/Prescriptions.py", label="Prescriptions", icon="💊")
-    st.sidebar.page_link("pages/NPS.py", label="NPS", icon="📊")
-    st.sidebar.page_link("pages/Installations.py", label="Installations", icon="📥")
-    st.sidebar.page_link("pages/Installations.py", label="Installations", icon="📲")
-    st.sidebar.page_link("pages/Registrations.py", label="Registrations", icon="👤")
-    st.sidebar.page_link("pages/Registrations.py", label="Registrations", icon="🔐")
-    st.sidebar.page_link("pages/Registrations.py", label="Registrations", icon="🔑")
-    st.sidebar.page_link("pages/Raw_data.py", label="Raw data", icon="🥩")
-    st.sidebar.page_link("pages/Raw_data.py", label="Raw data", icon="⚙️")
-    st.sidebar.page_link("pages/Raw_data.py", label="Raw data", icon="🏭")
+    st.sidebar.page_link("pages/Inicio.py", label="Inicio", icon=":material/home:")
+    st.sidebar.page_link("pages/Chats.py", label="Chats", icon=":material/chat:")
+    st.sidebar.page_link("pages/Videocalls.py", label="Videocalls", icon=":material/videocam:")
+    st.sidebar.page_link("pages/Prescriptions.py", label="Prescriptions", icon=":material/clinical_notes:")
+    st.sidebar.page_link("pages/NPS.py", label="NPS", icon=":material/thumb_up:")
+    st.sidebar.page_link("pages/Installations.py", label="Installations", icon=":material/download:")
+    st.sidebar.page_link("pages/Registrations.py", label="Registrations", icon=":material/app_registration:")
+    st.sidebar.page_link("pages/Raw_data.py", label="Raw data", icon=":material/table:")
     st.sidebar.divider()
     st.sidebar.header("Filtros")
 
@@ -197,7 +194,7 @@ MDSidebar()
 
 # with cols[11]:
 LogoMini = Image.open("images/logos/MDLogoMini.png")
-st.image(LogoMini)
+st.container().image(LogoMini)
 
 
 st.title('Meeting Doctors Analytics')
@@ -277,7 +274,7 @@ for current in dataframes:
 
         # Generamos el barchart mensual/anual
         st.subheader('Evolución de consultas Chat, Videoconsultas y Recetas Electrónicas - ' + xAxisName)
-        st.bar_chart(cy_current_df_date, x=xAxisName, y="UsageAmount", color="#4fa6ff", x_label='', y_label='')
+        st.container(border=True).bar_chart(cy_current_df_date, x=xAxisName, y="UsageAmount", color="#4fa6ff", x_label='', y_label='')
     
     elif current_df_name == 'nps':
         # Sumamos las encuestas agrupadas para calcular el NPS
@@ -288,9 +285,9 @@ for current in dataframes:
         # Generamos el linechart mensual/anual
         st.subheader('Evolución de NPS - ' + xAxisName)
         if (cy_current_df_date[xAxisName].nunique() == 1) or (len(years_selected) == 1 and len(month_selected) == 1):
-            st.scatter_chart(cy_current_df_date, x=xAxisName, y="Nps", color="#4fa6ff", x_label='', y_label='')
+            st.container(border=True).scatter_chart(cy_current_df_date, x=xAxisName, y="Nps", color="#4fa6ff", x_label='', y_label='')
         else:
-            st.line_chart(cy_current_df_date, x=xAxisName, y="Nps", color="#4fa6ff", x_label='', y_label='') 
+            st.container(border=True).line_chart(cy_current_df_date, x=xAxisName, y="Nps", color="#4fa6ff", x_label='', y_label='') 
     
     elif current_df_name == 'installs':
         # Sumamos el recuento de Instalaciones y Registros para obtener el ratio
@@ -302,7 +299,7 @@ for current in dataframes:
         # Generamos el linechart mensual/anual
         st.subheader('Evolución del % de Registros - ' + xAxisName)
         if (cy_current_df_date[xAxisName].nunique() == 1) or (len(years_selected) == 1 and len(month_selected) == 1):
-            st.scatter_chart(cy_current_df_date, x=xAxisName, y="ratio_regs", color="#4fa6ff", x_label='', y_label='')
+            st.container(border=True).scatter_chart(cy_current_df_date, x=xAxisName, y="ratio_regs", color="#4fa6ff", x_label='', y_label='')
         else:
-            st.line_chart(cy_current_df_date, x=xAxisName, y="ratio_regs", color="#4fa6ff", x_label='', y_label='') 
+            st.container(border=True).line_chart(cy_current_df_date, x=xAxisName, y="ratio_regs", color="#4fa6ff", x_label='', y_label='') 
 
