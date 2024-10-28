@@ -12,31 +12,49 @@ def MDSetAppCFG():
     st.set_page_config(layout="wide", page_title="MeetingDoctors - Analytics", page_icon=LogoMini)
     st.html(
         """
-            <style>
-                [data-testid="stSidebarContent"] {
-                    color: rgb(255,255,255);
-                    background-color: rgb(0,16,66);
-                }
-                [data-testid="stSidebarContent"] [data-testid="stMarkdownContainer"],
-                [data-testid="stSidebarContent"] [data-testid="stMarkdownContainer"] h2 {
-                    color: rgb(255,255,255) !important;
-                }
-            </style>
+        <style>
+            [data-testid="stSidebarContent"] {
+                color: rgb(255,255,255);
+                background-color: rgb(0,16,66);
+            }
+            [data-testid="stSidebarContent"] [data-testid="stMarkdownContainer"],
+            [data-testid="stSidebarContent"] [data-testid="stMarkdownContainer"] h2 {
+                color: rgb(255,255,255) !important;
+            }
+            [data-testid="stSidebarContent"] button[title="View fullscreen"],
+            .stAppViewMain button[title="View fullscreen"]:has(+ .stImage) {
+                visibility: hidden;
+            }
+            .stAppViewMain [data-testid="stImageContainer"] img {
+                width: 5%;
+                margin-left: auto;
+                margin-right: 0%;
+                margin-bottom: -5%;
+            }
+        </style>
         """
     )
     
 def MDSidebar():
-    image = Image.open("images/logos/MDLogo.png")
+    image = Image.open("images/logos/MDLogoWhite.png")
     st.sidebar.image(image)
     st.sidebar.header("Servicios")
-    st.sidebar.page_link("pages/Inicio.py", label="Inicio")
-    st.sidebar.page_link("pages/Chats.py", label="Chats")
-    st.sidebar.page_link("pages/Videocalls.py", label="Videocalls")
-    st.sidebar.page_link("pages/Prescriptions.py", label="Prescriptions")
-    st.sidebar.page_link("pages/NPS.py", label="NPS")
-    st.sidebar.page_link("pages/Installations.py", label="Installations")
-    st.sidebar.page_link("pages/Registrations.py", label="Registrations")
-    st.sidebar.page_link("pages/Raw_data.py", label="Raw data")
+    st.sidebar.page_link("pages/Inicio.py", label="Inicio", icon="🏠")
+    st.sidebar.page_link("pages/Chats.py", label="Chats", icon="💬")
+    st.sidebar.page_link("pages/Chats.py", label="Chats", icon="✉️")
+    st.sidebar.page_link("pages/Chats.py", label="Chats", icon="📩")
+    st.sidebar.page_link("pages/Chats.py", label="Chats", icon="📬")
+    st.sidebar.page_link("pages/Videocalls.py", label="Videocalls", icon="🎥")
+    st.sidebar.page_link("pages/Prescriptions.py", label="Prescriptions", icon="💊")
+    st.sidebar.page_link("pages/NPS.py", label="NPS", icon="📊")
+    st.sidebar.page_link("pages/Installations.py", label="Installations", icon="📥")
+    st.sidebar.page_link("pages/Installations.py", label="Installations", icon="📲")
+    st.sidebar.page_link("pages/Registrations.py", label="Registrations", icon="👤")
+    st.sidebar.page_link("pages/Registrations.py", label="Registrations", icon="🔐")
+    st.sidebar.page_link("pages/Registrations.py", label="Registrations", icon="🔑")
+    st.sidebar.page_link("pages/Raw_data.py", label="Raw data", icon="🥩")
+    st.sidebar.page_link("pages/Raw_data.py", label="Raw data", icon="⚙️")
+    st.sidebar.page_link("pages/Raw_data.py", label="Raw data", icon="🏭")
     st.sidebar.header("Filtros")
 
 def MDMultiselectFilter (multiselectname, df):
@@ -171,6 +189,13 @@ def filter_df(df, column):
 
 MDSetAppCFG()
 MDSidebar()
+
+# cols = st.columns([1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1])
+
+# with cols[11]:
+LogoMini = Image.open("images/logos/MDLogoMini.png")
+st.image(LogoMini)
+
 
 st.title('Meeting Doctors Analytics')
 st.markdown(
