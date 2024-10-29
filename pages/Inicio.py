@@ -21,10 +21,6 @@ def MDSetAppCFG():
             .stAppViewMain button[title="View fullscreen"]:has(+ .stImage) {
                 visibility: hidden;
             }
-            .stAppViewMain [data-testid="stImageContainer"] img {
-                width: 10%;
-                margin-left: auto;
-            }
             [data-testid="stVerticalBlockBorderWrapper"]:has(.stImage) {
                 border-color: rgb(79,166,251);
             }
@@ -32,10 +28,10 @@ def MDSetAppCFG():
                 border-color: rgb(79,166,251) !important;
             }
             [data-testid="stIconMaterial"] {
-                color: rgba(255, 255, 255, 0.7);
+                color: rgba(255,255,255,0.7);
             }
             [data-testid="stVerticalBlockBorderWrapper"]:has([data-testid="stVegaLiteChart"]) {
-                border-color: rgb(79,166,251);
+                border-color: rgb(0,16,66);
             }
         </style>
         """
@@ -189,13 +185,16 @@ def filter_df(df, column):
 MDSetAppCFG()
 MDSidebar()
 
-# cols = st.columns([1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1])
 
 cols = st.columns(2)
 
 with cols[1]:
-    LogoMini = Image.open("images/logos/MDLogoMini.png")
-    st.container().image(LogoMini)
+    cols2 = st.columns(8)
+    with cols2[7]:
+        st.image("images/logos/MDLogoMini.png", use_column_width=True)
+
+    # LogoMini = Image(width=5).open("images/logos/MDLogoMini.png")
+    # st.container().image(LogoMini)
 
 with cols[0]:
     st.title('Meeting Doctors Analytics')
@@ -204,9 +203,9 @@ st.markdown(
         ### Bienvenido a MD Analytics
         MD Analytics es un app mediante que permite el seguimiento y análisis básico de los distintos servicios contratados.
 
-        👈 Mediante estos selectores puedes seleccionar el servicio que deseas analizar
+        Mediante los selectores de la izquierda puedes seleccionar el servicio que deseas analizar y/o filtrar los datos.
 
-        **IMPORTANTE: Este dashboard no dispone de datos real-time.** Los datos a analizar siempre son hasta último día cerrado
+        **IMPORTANTE: Este dashboard no dispone de datos real-time.** Los datos a analizar siempre son hasta último día cerrado.
 
         *Si tienes cualquier duda o incidencia con el dashboard, ponte en contacto con nuestro equipo de [data](mailto:data@meetingdoctors.com)*
     """
