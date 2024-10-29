@@ -18,13 +18,15 @@ def MDSetAppCFG():
                 color: rgb(255,255,255) !important;
             }
             [data-testid="stSidebarContent"] button[title="View fullscreen"],
-            .stAppViewMain [data-testid="StyledFullScreenButton"]:has(+ .stImage) {
+            .stAppViewMain [data-testid="StyledFullScreenButton"]:has(+ .stImage),
+            .stMain [data-testid="StyledFullScreenButton"]:has(+ .stImage) {
                 visibility: hidden;
             }
             [data-testid="stVerticalBlockBorderWrapper"]:has(.stImage) {
                 border-color: rgb(79,166,251);
             }
-            .stAppViewMain [data-testid="stImageContainer"] img {
+            .stAppViewMain [data-testid="stImageContainer"] img,
+            .stMain [data-testid="stImageContainer"] img {
                 width: 10% !important;
                 margin-left: auto !important;
             }
