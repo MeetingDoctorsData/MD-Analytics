@@ -18,11 +18,15 @@ def MDSetAppCFG():
                 color: rgb(255,255,255) !important;
             }
             [data-testid="stSidebarContent"] button[title="View fullscreen"],
-            .stAppViewMain button[title="View fullscreen"]:has(+ .stImage) {
+            .stAppViewMain [data-testid="StyledFullScreenButton"]:has(+ .stImage) {
                 visibility: hidden;
             }
             [data-testid="stVerticalBlockBorderWrapper"]:has(.stImage) {
                 border-color: rgb(79,166,251);
+            }
+            .stAppViewMain [data-testid="stImageContainer"] img {
+                width: 10% !important;
+                margin-left: auto !important;
             }
             .stMarkdown hr {
                 border-color: rgb(79,166,251) !important;
@@ -189,9 +193,10 @@ MDSidebar()
 cols = st.columns(2)
 
 with cols[1]:
-    cols2 = st.columns(8)
-    with cols2[7]:
-        st.image("images/logos/MDLogoMini.png", use_column_width=True)
+    # cols2 = st.columns(8)
+    # with cols2[7]:
+    #     st.image("images/logos/MDLogoMini.png", use_column_width=True)
+    st.image("images/logos/MDLogoMini.png")
 
     # LogoMini = Image(width=5).open("images/logos/MDLogoMini.png")
     # st.container().image(LogoMini)
@@ -255,6 +260,9 @@ for current in dataframes:
     current_df = current[0]
     current_df_name = current[1]
 
+    # Ordenamos los meses del DataFrame
+    current_df['Mes'] = pd.Categorical(current_df['Mes'], categories=months, ordered=True)
+
     # Pregutamos si hay algun filtro realizado, en caso de tenerlo, lo aplicamos al dataset para generar los gráficos
     if current_df_name == 'installs' or current_df_name == 'registers':
         current_df = filter_df(current_df, None)
@@ -270,7 +278,7 @@ for current in dataframes:
 
     if current_df_name == 'usages':
         # Hacemos un sum agrupando por el Axis X
-        cy_current_df_date = current_df.groupby(xAxisName)['UsageAmount'].sum().reset_index(name ='UsageAmount')
+        cy_current_df_date = current_df.groupby(xAxisName)['UsageAmount'].sum().reset_index(name='UsageAmount')
 
         # Generamos el barchart mensual/anual
         st.subheader('Evolución de consultas Chat, Videoconsultas y Recetas Electrónicas - ' + xAxisName)
