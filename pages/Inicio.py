@@ -22,9 +22,8 @@ def MDSetAppCFG():
                 visibility: hidden;
             }
             .stAppViewMain [data-testid="stImageContainer"] img {
-                width: 5%;
+                width: 10%;
                 margin-left: auto;
-                margin-bottom: -5%;
             }
             [data-testid="stVerticalBlockBorderWrapper"]:has(.stImage) {
                 border-color: rgb(79,166,251);
@@ -192,12 +191,14 @@ MDSidebar()
 
 # cols = st.columns([1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1])
 
-# with cols[11]:
-LogoMini = Image.open("images/logos/MDLogoMini.png")
-st.container().image(LogoMini)
+cols = st.columns(2)
 
+with cols[1]:
+    LogoMini = Image.open("images/logos/MDLogoMini.png")
+    st.container().image(LogoMini)
 
-st.title('Meeting Doctors Analytics')
+with cols[0]:
+    st.title('Meeting Doctors Analytics')
 st.markdown(
     """
         ### Bienvenido a MD Analytics
