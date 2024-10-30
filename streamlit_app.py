@@ -7,39 +7,60 @@ from PIL import Image
 def MDSetAppCFG():
     LogoMini = Image.open("images/logos/MDLogoMini.png")
     st.set_page_config(layout="wide", page_title="MeetingDoctors - Analytics", page_icon=LogoMini)
-    custom_html = """
-    <div class="banner">
-        <img src="https://meetingdoctors.com/app/themes/custom_theme/build/assets/img/logo_meeting_doctors.png" alt="Banner Image">
-    </div>
-    <style>
-        .banner {
-            width: 100%;
-            height: 200px;
-            overflow: hidden;
-            background-color: #001042
-        }
-        .banner img {
-            width: 100%;
-            object-fit: cover;
-            background-color: #001042
-        }
-    </style>
-    """
-    # Display the custom HTML
-    # st.components.v1.html(custom_html)
-
+    st.html(
+        """
+        <style>
+            [data-testid="stSidebarContent"] {
+                background-color: rgb(0,16,66);
+            }
+            [data-testid="stSidebarContent"] [data-testid="stMarkdownContainer"],
+            [data-testid="stSidebarContent"] [data-testid="stMarkdownContainer"] h2 {
+                color: rgb(255,255,255) !important;
+            }
+            [data-testid="stSidebarContent"] button[title="View fullscreen"],
+            .stAppViewMain [data-testid="StyledFullScreenButton"]:has(+ .stImage),
+            .stMain [data-testid="StyledFullScreenButton"]:has(+ .stImage) {
+                visibility: hidden;
+            }
+            [data-testid="stVerticalBlockBorderWrapper"]:has(.stImage) {
+                border-color: rgb(79,166,251);
+            }
+            .stAppViewMain [data-testid="stImageContainer"] img,
+            .stMain [data-testid="stImageContainer"] img {
+                width: 10% !important;
+                margin-left: auto !important;
+            }
+            .stMarkdown hr {
+                border-color: rgb(79,166,251) !important;
+            }
+            [data-testid="stIconMaterial"] {
+                color: rgba(255,255,255,0.7);
+            }
+            [data-testid="stVerticalBlockBorderWrapper"]:has([data-testid="stVegaLiteChart"]) {
+                border-color: rgb(0,16,66);
+            }
+            [data-testid="StyledFullScreenButton"] {
+                border: 1px solid #001042;
+                border-radius: 50%;
+                background-color: rgb(245,245,245);
+            }
+        </style>
+        """
+    )
+    
 def MDSidebar():
-    image = Image.open("images/logos/MDLogo.png")
+    image = Image.open("images/logos/MDLogoWhite.png")
     st.sidebar.image(image)
     st.sidebar.header("Servicios")
-    st.sidebar.page_link("pages/Inicio.py", label="Inicio")
-    st.sidebar.page_link("pages/Chats.py", label="Chats")
-    st.sidebar.page_link("pages/Videocalls.py", label="Videocalls")
-    st.sidebar.page_link("pages/Prescriptions.py", label="Prescriptions")
-    st.sidebar.page_link("pages/NPS.py", label="NPS")
-    st.sidebar.page_link("pages/Installations.py", label="Installations")
-    st.sidebar.page_link("pages/Registrations.py", label="Registrations")
-    st.sidebar.page_link("pages/Raw_data.py", label="Raw data")
+    st.sidebar.page_link("pages/Inicio.py", label="Inicio", icon=":material/home:")
+    st.sidebar.page_link("pages/Chats.py", label="Chats", icon=":material/chat:")
+    st.sidebar.page_link("pages/Videocalls.py", label="Videocalls", icon=":material/videocam:")
+    st.sidebar.page_link("pages/Prescriptions.py", label="Prescriptions", icon=":material/clinical_notes:")
+    st.sidebar.page_link("pages/NPS.py", label="NPS", icon=":material/thumb_up:")
+    st.sidebar.page_link("pages/Installations.py", label="Installations", icon=":material/download:")
+    st.sidebar.page_link("pages/Registrations.py", label="Registrations", icon=":material/app_registration:")
+    st.sidebar.page_link("pages/Raw_data.py", label="Raw data", icon=":material/table:")
+    st.sidebar.divider()
     st.sidebar.header("Filtros")
 
 def MDMultiselectFilter (multiselectname, df):
@@ -175,15 +196,29 @@ def filter_df(df, column):
 MDSetAppCFG()
 MDSidebar()
 
-st.title('Meeting Doctors Analytics')
+
+cols = st.columns(2)
+
+with cols[1]:
+    st.image("images/logos/MDLogoMini.png")
+
+    # cols2 = st.columns(8)
+    # with cols2[7]:
+    #     st.image("images/logos/MDLogoMini.png", use_column_width=True)
+
+    # LogoMini = Image(width=5).open("images/logos/MDLogoMini.png")
+    # st.container().image(LogoMini)
+
+with cols[0]:
+    st.title('Meeting Doctors Analytics')
 st.markdown(
     """
         ### Bienvenido a MD Analytics
         MD Analytics es un app mediante que permite el seguimiento y análisis básico de los distintos servicios contratados.
 
-        👈 Mediante estos selectores puedes seleccionar el servicio que deseas analizar
+        Mediante los selectores de la izquierda puedes seleccionar el servicio que deseas analizar y/o filtrar los datos.
 
-        **IMPORTANTE: Este dashboard no dispone de datos real-time.** Los datos a analizar siempre son hasta último día cerrado
+        **IMPORTANTE: Este dashboard no dispone de datos real-time.** Los datos a analizar siempre son hasta último día cerrado.
 
         *Si tienes cualquier duda o incidencia con el dashboard, ponte en contacto con nuestro equipo de [data](mailto:data@meetingdoctors.com)*
     """
@@ -191,12 +226,6 @@ st.markdown(
 
 st.subheader('')
 st.subheader('Indicadores generales')
-
-# conn = MDConnection()
-# specialitiesdf = MDGetMasterData(conn,"specialities")
-# usersdf = MDGetFilteredData(conn,"users")
-
-# MDFilters(usersdf["UserCustomerGroup"].str.capitalize().unique(),specialitiesdf["SpecialityES"].unique())
 
 
 # Nos conectamos a la base de datos
@@ -239,6 +268,9 @@ for current in dataframes:
     current_df = current[0]
     current_df_name = current[1]
 
+    # Ordenamos los meses del DataFrame
+    current_df['Mes'] = pd.Categorical(current_df['Mes'], categories=months, ordered=True)
+
     # Pregutamos si hay algun filtro realizado, en caso de tenerlo, lo aplicamos al dataset para generar los gráficos
     if current_df_name == 'installs' or current_df_name == 'registers':
         current_df = filter_df(current_df, None)
@@ -254,11 +286,11 @@ for current in dataframes:
 
     if current_df_name == 'usages':
         # Hacemos un sum agrupando por el Axis X
-        cy_current_df_date = current_df.groupby(xAxisName)['UsageAmount'].sum().reset_index(name ='UsageAmount')
+        cy_current_df_date = current_df.groupby(xAxisName)['UsageAmount'].sum().reset_index(name='UsageAmount')
 
         # Generamos el barchart mensual/anual
         st.subheader('Evolución de consultas Chat, Videoconsultas y Recetas Electrónicas - ' + xAxisName)
-        st.bar_chart(cy_current_df_date, x=xAxisName, y="UsageAmount", color="#4fa6ff", x_label='', y_label='')
+        st.container(border=True).bar_chart(cy_current_df_date, x=xAxisName, y="UsageAmount", color="#4fa6ff", x_label='', y_label='')
     
     elif current_df_name == 'nps':
         # Sumamos las encuestas agrupadas para calcular el NPS
@@ -269,9 +301,9 @@ for current in dataframes:
         # Generamos el linechart mensual/anual
         st.subheader('Evolución de NPS - ' + xAxisName)
         if (cy_current_df_date[xAxisName].nunique() == 1) or (len(years_selected) == 1 and len(month_selected) == 1):
-            st.scatter_chart(cy_current_df_date, x=xAxisName, y="Nps", color="#4fa6ff", x_label='', y_label='')
+            st.container(border=True).scatter_chart(cy_current_df_date, x=xAxisName, y="Nps", color="#4fa6ff", x_label='', y_label='')
         else:
-            st.line_chart(cy_current_df_date, x=xAxisName, y="Nps", color="#4fa6ff", x_label='', y_label='') 
+            st.container(border=True).line_chart(cy_current_df_date, x=xAxisName, y="Nps", color="#4fa6ff", x_label='', y_label='') 
     
     elif current_df_name == 'installs':
         # Sumamos el recuento de Instalaciones y Registros para obtener el ratio
@@ -283,6 +315,7 @@ for current in dataframes:
         # Generamos el linechart mensual/anual
         st.subheader('Evolución del % de Registros - ' + xAxisName)
         if (cy_current_df_date[xAxisName].nunique() == 1) or (len(years_selected) == 1 and len(month_selected) == 1):
-            st.scatter_chart(cy_current_df_date, x=xAxisName, y="ratio_regs", color="#4fa6ff", x_label='', y_label='')
+            st.container(border=True).scatter_chart(cy_current_df_date, x=xAxisName, y="ratio_regs", color="#4fa6ff", x_label='', y_label='')
         else:
-            st.line_chart(cy_current_df_date, x=xAxisName, y="ratio_regs", color="#4fa6ff", x_label='', y_label='') 
+            st.container(border=True).line_chart(cy_current_df_date, x=xAxisName, y="ratio_regs", color="#4fa6ff", x_label='', y_label='') 
+

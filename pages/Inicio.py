@@ -39,6 +39,11 @@ def MDSetAppCFG():
             [data-testid="stVerticalBlockBorderWrapper"]:has([data-testid="stVegaLiteChart"]) {
                 border-color: rgb(0,16,66);
             }
+            [data-testid="StyledFullScreenButton"] {
+                border: 1px solid #001042;
+                border-radius: 50%;
+                background-color: rgb(245,245,245);
+            }
         </style>
         """
     )
@@ -195,10 +200,11 @@ MDSidebar()
 cols = st.columns(2)
 
 with cols[1]:
+    st.image("images/logos/MDLogoMini.png")
+
     # cols2 = st.columns(8)
     # with cols2[7]:
     #     st.image("images/logos/MDLogoMini.png", use_column_width=True)
-    st.image("images/logos/MDLogoMini.png")
 
     # LogoMini = Image(width=5).open("images/logos/MDLogoMini.png")
     # st.container().image(LogoMini)
@@ -305,7 +311,7 @@ for current in dataframes:
         cy_registers_df_date = registersdf.groupby(xAxisName)['Registers'].sum().reset_index(name ='Registers')
         cy_current_df_date['ratio_regs'] = (cy_registers_df_date['Registers'] * 100) / cy_current_df_date['Installs'] 
         cy_current_df_date = cy_current_df_date.groupby(xAxisName)['ratio_regs'].mean().round(1).reset_index(name ='ratio_regs')
-
+    
         # Generamos el linechart mensual/anual
         st.subheader('Evolución del % de Registros - ' + xAxisName)
         if (cy_current_df_date[xAxisName].nunique() == 1) or (len(years_selected) == 1 and len(month_selected) == 1):

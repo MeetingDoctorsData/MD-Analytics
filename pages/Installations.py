@@ -7,39 +7,69 @@ from PIL import Image
 def MDSetAppCFG():
     LogoMini = Image.open("images/logos/MDLogoMini.png")
     st.set_page_config(layout="wide", page_title="MeetingDoctors - Analytics", page_icon=LogoMini)
-    custom_html = """
-    <div class="banner">
-        <img src="https://meetingdoctors.com/app/themes/custom_theme/build/assets/img/logo_meeting_doctors.png" alt="Banner Image">
-    </div>
-    <style>
-        .banner {
-            width: 100%;
-            height: 200px;
-            overflow: hidden;
-            background-color: #001042
-        }
-        .banner img {
-            width: 100%;
-            object-fit: cover;
-            background-color: #001042
-        }
-    </style>
-    """
-    # Display the custom HTML
-    # st.components.v1.html(custom_html)
+    st.html(
+        """
+        <style>
+            [data-testid="stSidebarContent"] {
+                background-color: rgb(0,16,66);
+            }
+            [data-testid="stSidebarContent"] [data-testid="stMarkdownContainer"],
+            [data-testid="stSidebarContent"] [data-testid="stMarkdownContainer"] h2 {
+                color: rgb(255,255,255) !important;
+            }
+            [data-testid="stSidebarContent"] button[title="View fullscreen"],
+            .stAppViewMain [data-testid="StyledFullScreenButton"]:has(+ .stImage),
+            .stMain [data-testid="StyledFullScreenButton"]:has(+ .stImage) {
+                visibility: hidden;
+            }
+            [data-testid="StyledFullScreenButton"] {
+                border: 1px solid #001042;
+                border-radius: 50%;
+                background-color: rgb(245,245,245);
+            }
+            [data-testid="stVerticalBlockBorderWrapper"]:has(.stImage) {
+                border-color: rgb(79,166,251);
+            }
+            .stAppViewMain [data-testid="stImageContainer"] img,
+            .stMain [data-testid="stImageContainer"] img {
+                width: 10% !important;
+                margin-left: auto !important;
+            }
+            .stMarkdown hr {
+                border-color: rgb(79,166,251) !important;
+            }
+            [data-testid="stIconMaterial"] {
+                color: rgba(255,255,255,0.7);
+            }
+            [data-testid="stVerticalBlockBorderWrapper"]:has([data-testid="stVegaLiteChart"]) {
+                border-color: rgb(0,16,66);
+            }
+            [data-testid="column"] [data-testid="stVerticalBlockBorderWrapper"] [data-testid="stVegaLiteChart"]:has(canvas) {
+                border: 1px solid #001042;
+                border-radius: 2%;
+                padding: 5%;
+                width: 100% !important;
+            }
+            [data-testid="column"] [data-testid="stVerticalBlockBorderWrapper"] [data-testid="stVegaLiteChart"] canvas {
+                width: 100% !important;
+            }
+        </style>
+        """
+    )
 
 def MDSidebar():
-    image = Image.open("images/logos/MDLogo.png")
+    image = Image.open("images/logos/MDLogoWhite.png")
     st.sidebar.image(image)
     st.sidebar.header("Servicios")
-    st.sidebar.page_link("pages/Inicio.py", label="Inicio")
-    st.sidebar.page_link("pages/Chats.py", label="Chats")
-    st.sidebar.page_link("pages/Videocalls.py", label="Videocalls")
-    st.sidebar.page_link("pages/Prescriptions.py", label="Prescriptions")
-    st.sidebar.page_link("pages/NPS.py", label="NPS")
-    st.sidebar.page_link("pages/Installations.py", label="Installations")
-    st.sidebar.page_link("pages/Registrations.py", label="Registrations")
-    st.sidebar.page_link("pages/Raw_data.py", label="Raw data")
+    st.sidebar.page_link("pages/Inicio.py", label="Inicio", icon=":material/home:")
+    st.sidebar.page_link("pages/Chats.py", label="Chats", icon=":material/chat:")
+    st.sidebar.page_link("pages/Videocalls.py", label="Videocalls", icon=":material/videocam:")
+    st.sidebar.page_link("pages/Prescriptions.py", label="Prescriptions", icon=":material/clinical_notes:")
+    st.sidebar.page_link("pages/NPS.py", label="NPS", icon=":material/thumb_up:")
+    st.sidebar.page_link("pages/Installations.py", label="Installations", icon=":material/download:")
+    st.sidebar.page_link("pages/Registrations.py", label="Registrations", icon=":material/app_registration:")
+    st.sidebar.page_link("pages/Raw_data.py", label="Raw data", icon=":material/table:")
+    st.sidebar.divider()
     st.sidebar.header("Filtros")
 
 def MDMultiselectFilter (multiselectname, df):
@@ -80,7 +110,15 @@ def MDGetUsageData(conn):
 MDSetAppCFG()
 MDSidebar()
 
-st.title('Meeting Doctors Analytics')
+
+# Añadimos el Título y el Logo
+cols = st.columns(2)
+with cols[1]:
+    st.image("images/logos/MDLogoMini.png")
+
+with cols[0]:
+    st.title('Meeting Doctors Analytics')
+
 
 # Nos conectamos a la base de datos
 conn = MDConnection()
@@ -126,7 +164,7 @@ cy_installsdf_date = installusagedf.groupby(xAxisName)['Installs'].sum().reset_i
 
 # Generamos el barchart mensual/anual
 st.subheader('Evolución de Instalaciones - ' + xAxisName)
-st.bar_chart(cy_installsdf_date, x=xAxisName, y="Installs", color="#4fa6ff", x_label='', y_label='')
+st.container(border=True).bar_chart(cy_installsdf_date, x=xAxisName, y="Installs", color="#4fa6ff", x_label='', y_label='')
 
 
 
@@ -137,9 +175,10 @@ cy_installsdf_os = installusagedf.groupby('SistemaOperativo')['Installs'].sum().
 # cy_chatsdf_espe = cy_chatsdf_espe.sort_values(by='Installs',ascending=False)
 # print(cy_chatsdf_espe)
 
+st.subheader('')
 st.subheader('Distribución de Instalaciones por Sistema Operativo')
 
-cols = st.columns([1, 1])
+cols = st.columns(2)
 
 # Generamos el donut chart por especialidad
 # region_select = alt.selection_point(fields=[chatusagedf['Speciality'].drop_duplicates()], empty="all")
@@ -150,7 +189,9 @@ with cols[0]:
         # y=alt.Y('Installs').stack(True),
         # x=alt.X('Speciality', sort='y'),
         # opacity=alt.condition(region_select, alt.value(1), alt.value(0.25))
-    ).properties(width=600)
+    ).properties(
+        width='container'
+    )
 
     pie = base.mark_arc(outerRadius=120, innerRadius=50)
     # text = base.mark_text(radius=150, size=15).encode(text="Speciality:N")
@@ -159,15 +200,12 @@ with cols[0]:
 
 # Generamos el barchart por especialidad
 with cols[1]:
-    st.subheader(' ')
-    # st.bar_chart(cy_installsdf_os, x="SistemaOperativo", y="Installs", color="SistemaOperativo")
-
     base2 = alt.Chart(cy_installsdf_os).mark_bar().encode(
         alt.X("SistemaOperativo", axis=alt.Axis(title='')),
         alt.Y("Installs", axis=alt.Axis(title='')),
         alt.Color("SistemaOperativo").legend(None)
     ).properties(
-        width=700
+        width='container'
     )
     
     base2

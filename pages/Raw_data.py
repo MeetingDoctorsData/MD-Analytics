@@ -8,39 +8,49 @@ from PIL import Image
 def MDSetAppCFG():
     LogoMini = Image.open("images/logos/MDLogoMini.png")
     st.set_page_config(layout="wide", page_title="MeetingDoctors - Analytics", page_icon=LogoMini)
-    custom_html = """
-    <div class="banner">
-        <img src="https://meetingdoctors.com/app/themes/custom_theme/build/assets/img/logo_meeting_doctors.png" alt="Banner Image">
-    </div>
-    <style>
-        .banner {
-            width: 100%;
-            height: 200px;
-            overflow: hidden;
-            background-color: #001042
-        }
-        .banner img {
-            width: 100%;
-            object-fit: cover;
-            background-color: #001042
-        }
-    </style>
-    """
-    # Display the custom HTML
-    # st.components.v1.html(custom_html)
+    st.html(
+        """
+        <style>
+            [data-testid="stSidebarContent"] {
+                background-color: rgb(0,16,66);
+            }
+            [data-testid="stSidebarContent"] [data-testid="stMarkdownContainer"],
+            [data-testid="stSidebarContent"] [data-testid="stMarkdownContainer"] h2 {
+                color: rgb(255,255,255) !important;
+            }
+            [data-testid="stSidebarContent"] button[title="View fullscreen"],
+            .stAppViewMain [data-testid="StyledFullScreenButton"]:has(+ .stImage),
+            .stMain [data-testid="StyledFullScreenButton"]:has(+ .stImage) {
+                visibility: hidden;
+            }
+            .stAppViewMain [data-testid="stImageContainer"] img,
+            .stMain [data-testid="stImageContainer"] img {
+                width: 10% !important;
+                margin-left: auto !important;
+            }
+            .stMarkdown hr {
+                border-color: rgb(79,166,251) !important;
+            }
+            [data-testid="stIconMaterial"] {
+                color: rgba(255,255,255,0.7);
+            }
+        </style>
+        """
+    )
 
 def MDSidebar():
-    image = Image.open("images/logos/MDLogo.png")
+    image = Image.open("images/logos/MDLogoWhite.png")
     st.sidebar.image(image)
     st.sidebar.header("Servicios")
-    st.sidebar.page_link("pages/Inicio.py", label="Inicio")
-    st.sidebar.page_link("pages/Chats.py", label="Chats")
-    st.sidebar.page_link("pages/Videocalls.py", label="Videocalls")
-    st.sidebar.page_link("pages/Prescriptions.py", label="Prescriptions")
-    st.sidebar.page_link("pages/NPS.py", label="NPS")
-    st.sidebar.page_link("pages/Installations.py", label="Installations")
-    st.sidebar.page_link("pages/Registrations.py", label="Registrations")
-    st.sidebar.page_link("pages/Raw_data.py", label="Raw data")
+    st.sidebar.page_link("pages/Inicio.py", label="Inicio", icon=":material/home:")
+    st.sidebar.page_link("pages/Chats.py", label="Chats", icon=":material/chat:")
+    st.sidebar.page_link("pages/Videocalls.py", label="Videocalls", icon=":material/videocam:")
+    st.sidebar.page_link("pages/Prescriptions.py", label="Prescriptions", icon=":material/clinical_notes:")
+    st.sidebar.page_link("pages/NPS.py", label="NPS", icon=":material/thumb_up:")
+    st.sidebar.page_link("pages/Installations.py", label="Installations", icon=":material/download:")
+    st.sidebar.page_link("pages/Registrations.py", label="Registrations", icon=":material/app_registration:")
+    st.sidebar.page_link("pages/Raw_data.py", label="Raw data", icon=":material/table:")
+    st.sidebar.divider()
     st.sidebar.header("Filtros")
 
 def MDMultiselectFilter (multiselectname, df):
@@ -144,7 +154,14 @@ MDSetAppCFG()
 MDSidebar()
 
 
-st.title('Meeting Doctors Analytics')
+# Añadimos el Título y el Logo
+cols = st.columns(2)
+with cols[1]:
+    st.image("images/logos/MDLogoMini.png")
+
+with cols[0]:
+    st.title('Meeting Doctors Analytics')
+
 
 # Nos conectamos a la base de datos
 conn = MDConnection()
