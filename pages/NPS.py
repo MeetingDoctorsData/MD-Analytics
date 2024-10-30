@@ -45,13 +45,15 @@ def MDSetAppCFG():
             [data-testid="stVerticalBlockBorderWrapper"]:has([data-testid="stVegaLiteChart"]) {
                 border-color: rgb(0,16,66);
             }
-            [data-testid="column"] [data-testid="stVerticalBlockBorderWrapper"] [data-testid="stVegaLiteChart"]:has(canvas) {
+            [data-testid="column"] [data-testid="stVerticalBlockBorderWrapper"] [data-testid="stVegaLiteChart"]:has(canvas),
+            .stColumn [data-testid="stVerticalBlockBorderWrapper"] [data-testid="stVegaLiteChart"]:has(canvas) {
                 border: 1px solid #001042;
                 border-radius: 2%;
                 padding: 5%;
                 width: 100% !important;
             }
-            [data-testid="column"] [data-testid="stVerticalBlockBorderWrapper"] [data-testid="stVegaLiteChart"] canvas {
+            [data-testid="column"] [data-testid="stVerticalBlockBorderWrapper"] [data-testid="stVegaLiteChart"] canvas,
+            .stColumn [data-testid="stVerticalBlockBorderWrapper"] [data-testid="stVegaLiteChart"] canvas {
                 width: 100% !important;
             }
         </style>
