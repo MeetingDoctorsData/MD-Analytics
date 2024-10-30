@@ -270,10 +270,12 @@ for current in dataframes:
 
     # Ordenamos los meses del DataFrame
     current_df['Mes'] = pd.Categorical(current_df['Mes'], categories=months, ordered=True)
+    registersdf['Mes'] = pd.Categorical(registersdf['Mes'], categories=months, ordered=True)
 
     # Pregutamos si hay algun filtro realizado, en caso de tenerlo, lo aplicamos al dataset para generar los gráficos
-    if current_df_name == 'installs' or current_df_name == 'registers':
+    if current_df_name == 'installs':
         current_df = filter_df(current_df, None)
+        registersdf = filter_df(registersdf, None)
     else:
         current_df = filter_df(current_df, 'Speciality')
 
@@ -311,7 +313,7 @@ for current in dataframes:
         cy_registers_df_date = registersdf.groupby(xAxisName)['Registers'].sum().reset_index(name ='Registers')
         cy_current_df_date['ratio_regs'] = (cy_registers_df_date['Registers'] * 100) / cy_current_df_date['Installs'] 
         cy_current_df_date = cy_current_df_date.groupby(xAxisName)['ratio_regs'].mean().round(1).reset_index(name ='ratio_regs')
-    
+        
         # Generamos el linechart mensual/anual
         st.subheader('Evolución del % de Registros - ' + xAxisName)
         if (cy_current_df_date[xAxisName].nunique() == 1) or (len(years_selected) == 1 and len(month_selected) == 1):
